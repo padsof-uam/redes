@@ -60,7 +60,7 @@ u_char *packet;
         goto cleanup;
     }
 
-    if ((eth0 = pcap_open_live("eth0", 6, 0, 0, errbuf)) == NULL)
+    if ((eth0 = pcap_open_live("eth0", 10, 0, 0, errbuf)) == NULL)
     {
         printf("Error: pcap_open_live(): %s %s %d.\n", errbuf, __FILE__, __LINE__);
         result = ERROR;
