@@ -37,7 +37,7 @@ void print_packet(struct pcap_pkthdr *header, u_char *packet)
     printf("Paquete capturado. Imprimiendo diez primeros bytes: 0x");
 
     for (j = 0; j < header->caplen && j < HEAD_SIZE; j++)
-        printf("%x", packet[j]);
+        printf("%02x", packet[j]);
 
     printf("\n");
 }
@@ -100,7 +100,7 @@ int live_capture()
         }
 
         print_packet(&h, packet);
-        pcap_dump(dumper, &h, packet);
+        pcap_dump((u_char*) dumper, &h, packet);
 
         packet_count++;
     }

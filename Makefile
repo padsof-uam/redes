@@ -1,7 +1,7 @@
 GCC = $(CC)
 CFLAGS = -ggdb -std=gnu99 -Wall -pedantic
 LIBS = -lpcap
-TARGET = mkt
+TARGET = main
 
 OBJDIR = obj
 SRCDIR = src
@@ -22,7 +22,7 @@ $(TARGET): $(OBJDIR)/src/main.o $(OBJS) | $(BINDIR)
 	@$(GCC) $(CFLAGS) -o $(BINDIR)/$@ $^ $(LIBS)
 $(OBJDIR)/%.o: %.c | $(OBJDIR)
 	@echo "$< -> $@"
-	@$(GCC) $(CFLAGS) -c $< -o $@ $(LIBS)
+	@$(GCC) $(CFLAGS) -c $< -o $@
 $(OBJDIR):
 	@echo Creating obj directories
 	@mkdir -p $(OBJDIR)
