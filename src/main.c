@@ -38,6 +38,7 @@ void print_packet(struct pcap_pkthdr *header, u_char *packet)
 
     for (j = 0; j < header->caplen && j < HEAD_SIZE; j++)
         printf("%x", packet[j]);
+
     printf("\n");
 }
 
@@ -45,8 +46,8 @@ int live_capture()
 {
     int packet_count;
     char errbuf[PCAP_ERRBUF_SIZE];
-    
-u_char *packet;
+
+    u_char *packet;
     struct pcap_pkthdr h;
     pcap_t *eth0;
     pcap_t *dump_descr;
@@ -142,7 +143,7 @@ int open_file(const char *path)
 
 int main(int argc, char **argv)
 {
-	int result;
+    int result;
 
     if (argc == 1)
         result = live_capture();
