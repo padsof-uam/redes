@@ -5,12 +5,10 @@ gcc -o practica2 practica2.c -lpcap
 
 #include <stdio.h>
 #include <stdlib.h>
-
+#include <inttypes.h>
 #include <pcap.h>
 #include <string.h>
 #include <netinet/in.h>
-#include <linux/udp.h>
-#include <linux/tcp.h>
 #include <signal.h>
 #include <time.h>
 
@@ -34,7 +32,7 @@ pcap_t* descr;
 u_int64_t cont=1;
 
 void handleSignal(int nsignal){
-	printf("Control C pulsado (%lu)\n", cont);
+	printf("Control C pulsado (%" PRIu64 ")\n", cont);
 	pcap_close(descr);
 	exit(OK);
 }
@@ -71,7 +69,7 @@ int main(int argc, char **argv)
 		cont++;
 
 		if((retorno = analizarPaquete(paquete, cabecera, cont)) != OK){
-			printf("Error al analizar el paquete %lu; %s %d.\n", cont, __FILE__, __LINE__);
+			printf("Error al analizar el paquete %" PRIu64 "; %s %d.\n", cont, __FILE__, __LINE__);
 			exit(retorno);
 		}
 	}
@@ -85,7 +83,7 @@ int main(int argc, char **argv)
 	}
 	else // PCAP_ERROR_BREAK es la otra salida posible, hemos llegado a final de archivo.
 	{
-		printf("No hay mas paquetes.\n Capturados %d paquetes.\n\n",cont);
+		printf("No hay mas paquetes.\n Capturados %" PRIu64 " paquetes.\n\n",cont);
 	}
 
 	pcap_close(descr);
