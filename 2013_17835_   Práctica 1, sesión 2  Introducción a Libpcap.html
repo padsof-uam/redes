@@ -1,0 +1,355 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<!-- saved from url=(0053)https://moodle.uam.es/mod/resource/view.php?id=615773 -->
+<html xmlns="http://www.w3.org/1999/xhtml" dir="ltr" lang="es-es" xml:lang="es-es"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    
+<link rel="stylesheet" type="text/css" href="./2013_17835_   Práctica 1, sesión 2  Introducción a Libpcap_files/styles.php">
+<link rel="stylesheet" type="text/css" href="./2013_17835_   Práctica 1, sesión 2  Introducción a Libpcap_files/styles(1).php">
+
+<!--[if IE 7]>
+    <link rel="stylesheet" type="text/css" href="https://moodle.uam.es/theme/standard/styles_ie7.css" />
+<![endif]-->
+<!--[if IE 6]>
+    <link rel="stylesheet" type="text/css" href="https://moodle.uam.es/theme/standard/styles_ie6.css" />
+<![endif]-->
+
+
+    <meta name="keywords" content="moodle, 2013_17835_*: Práctica 1, sesión 2: Introducción a Libpcap ">
+    <title>2013_17835_*: Práctica 1, sesión 2: Introducción a Libpcap</title>
+    <link rel="shortcut icon" href="https://moodle.uam.es/theme/UAM/favicon.ico">
+    <script type="text/javascript" async="" src="./2013_17835_   Práctica 1, sesión 2  Introducción a Libpcap_files/ga.js"></script><script type="text/javascript" src="./2013_17835_   Práctica 1, sesión 2  Introducción a Libpcap_files/spellChecker.js"></script><style type="text/css"></style>
+<!--<style type="text/css">/*<![CDATA[*/ body{behavior:url(https://moodle.uam.es/lib/csshover.htc);} /*]]>*/</style>-->
+
+<script type="text/javascript" src="./2013_17835_   Práctica 1, sesión 2  Introducción a Libpcap_files/javascript-static.js"></script>
+<script type="text/javascript" src="./2013_17835_   Práctica 1, sesión 2  Introducción a Libpcap_files/javascript-mod.php"></script>
+<script type="text/javascript" src="./2013_17835_   Práctica 1, sesión 2  Introducción a Libpcap_files/overlib.js"></script>
+<script type="text/javascript" src="./2013_17835_   Práctica 1, sesión 2  Introducción a Libpcap_files/overlib_cssstyle.js"></script>
+<script type="text/javascript" src="./2013_17835_   Práctica 1, sesión 2  Introducción a Libpcap_files/cookies.js"></script>
+<script type="text/javascript" src="./2013_17835_   Práctica 1, sesión 2  Introducción a Libpcap_files/ufo.js"></script>
+<script type="text/javascript" src="./2013_17835_   Práctica 1, sesión 2  Introducción a Libpcap_files/dropdown.js"></script>  
+
+<script type="text/javascript">
+
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-2955223-10']);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+
+</script>
+
+<script type="text/javascript" defer="defer">
+//<![CDATA[
+setTimeout('fix_column_widths()', 20);
+//]]>
+</script>
+<script type="text/javascript">
+//<![CDATA[
+function openpopup(url, name, options, fullscreen) {
+    var fullurl = "https://moodle.uam.es" + url;
+    var windowobj = window.open(fullurl, name, options);
+    if (!windowobj) {
+        return true;
+    }
+    if (fullscreen) {
+        windowobj.moveTo(0, 0);
+        windowobj.resizeTo(screen.availWidth, screen.availHeight);
+    }
+    windowobj.focus();
+    return false;
+}
+
+function uncheckall() {
+    var inputs = document.getElementsByTagName('input');
+    for(var i = 0; i < inputs.length; i++) {
+        inputs[i].checked = false;
+    }
+}
+
+function checkall() {
+    var inputs = document.getElementsByTagName('input');
+    for(var i = 0; i < inputs.length; i++) {
+        inputs[i].checked = true;
+    }
+}
+
+function inserttext(text) {
+  text = ' ' + text + ' ';
+  if ( opener.document.forms['theform'].message.createTextRange && opener.document.forms['theform'].message.caretPos) {
+    var caretPos = opener.document.forms['theform'].message.caretPos;
+    caretPos.text = caretPos.text.charAt(caretPos.text.length - 1) == ' ' ? text + ' ' : text;
+  } else {
+    opener.document.forms['theform'].message.value  += text;
+  }
+  opener.document.forms['theform'].message.focus();
+}
+
+function getElementsByClassName(oElm, strTagName, oClassNames){
+	var arrElements = (strTagName == "*" && oElm.all)? oElm.all : oElm.getElementsByTagName(strTagName);
+	var arrReturnElements = new Array();
+	var arrRegExpClassNames = new Array();
+	if(typeof oClassNames == "object"){
+		for(var i=0; i<oClassNames.length; i++){
+			arrRegExpClassNames.push(new RegExp("(^|\\s)" + oClassNames[i].replace(/\-/g, "\\-") + "(\\s|$)"));
+		}
+	}
+	else{
+		arrRegExpClassNames.push(new RegExp("(^|\\s)" + oClassNames.replace(/\-/g, "\\-") + "(\\s|$)"));
+	}
+	var oElement;
+	var bMatchesAll;
+	for(var j=0; j<arrElements.length; j++){
+		oElement = arrElements[j];
+		bMatchesAll = true;
+		for(var k=0; k<arrRegExpClassNames.length; k++){
+			if(!arrRegExpClassNames[k].test(oElement.className)){
+				bMatchesAll = false;
+				break;
+			}
+		}
+		if(bMatchesAll){
+			arrReturnElements.push(oElement);
+		}
+	}
+	return (arrReturnElements)
+}
+//]]>
+</script>
+<style>[touch-action="none"]{ -ms-touch-action: none; touch-action: none; }[touch-action="pan-x"]{ -ms-touch-action: pan-x; touch-action: pan-x; }[touch-action="pan-y"]{ -ms-touch-action: pan-y; touch-action: pan-y; }[touch-action="scroll"],[touch-action="pan-x pan-y"],[touch-action="pan-y pan-x"]{ -ms-touch-action: pan-x pan-y; touch-action: pan-x pan-y; }</style></head>
+
+<body class="mod-resource course-29346 dir-ltr lang-es_es_utf8" id="mod-resource-view">
+
+<div id="page">
+
+    <div id="header" class=" clearfix">        <h1 class="headermain"><img alt="Moodle" src="./2013_17835_   Práctica 1, sesión 2  Introducción a Libpcap_files/logo_small.jpg"></h1>
+        <div class="headermenu"><div class="navigation">
+<ul><li><form action="https://moodle.uam.es/mod/lesson/view.php" onclick="this.target=&#39;_top&#39;;"><fieldset class="invisiblefieldset"><input type="hidden" name="id" value="633522"><button type="submit" title="Actividad anterior"><span class="arrow ">◄</span><span class="accesshide ">&nbsp;Actividad anterior</span></button></fieldset></form></li><li><form action="https://moodle.uam.es/course/jumpto.php" method="get" id="navmenupopup" class="popupform"><div><select id="navmenupopup_jump" name="jump" onchange="self.location=document.getElementById(&#39;navmenupopup&#39;).jump.options[document.getElementById(&#39;navmenupopup&#39;).jump.selectedIndex].value;">
+   <option value="https://moodle.uam.es/mod/forum/view.php?id=558534" style="background-image: url(https://moodle.uam.es/mod/forum/icon.gif);">Foro de Noticias</option>
+   <optgroup label="
+Información general del curso ">   <option value="https://moodle.uam.es/mod/resource/view.php?id=581205" style="background-image: url(https://moodle.uam.es/mod/resource/icon.gif);">Guía Docente</option>
+   <option value="https://moodle.uam.es/mod/resource/view.php?id=581206" style="background-image: url(https://moodle.uam.es/mod/resource/icon.gif);">Normas generales de evaluación de las prácticas </option>
+   </optgroup>   <optgroup label=" Prácticas ">   <option value="https://moodle.uam.es/mod/resource/view.php?id=592143" style="background-image: url(https://moodle.uam.es/mod/resource/icon.gif);">Calendario de prácticas</option>
+   </optgroup>   <optgroup label="Tema 5">   <option value="https://moodle.uam.es/mod/lesson/view.php?id=603809" style="background-image: url(https://moodle.uam.es/mod/lesson/icon.gif);">Máquina Virtual EPSSLAX para realizar las prácticas</option>
+   <option value="https://moodle.uam.es/mod/lesson/view.php?id=604268" style="background-image: url(https://moodle.uam.es/mod/lesson/icon.gif);">Introducción a Wireshark para el análisis de tramas</option>
+   <option value="https://moodle.uam.es/mod/lesson/view.php?id=606106" style="background-image: url(https://moodle.uam.es/mod/lesson/icon.gif);">Primeros pasos en Wireshark</option>
+   </optgroup>   <optgroup label="Tema 6">   <option value="https://moodle.uam.es/mod/lesson/view.php?id=607270" style="background-image: url(https://moodle.uam.es/mod/lesson/icon.gif);">KDevelope</option>
+   <option value="https://moodle.uam.es/mod/lesson/view.php?id=633522" style="background-image: url(https://moodle.uam.es/mod/lesson/icon.gif);">Comandos útiles para programación</option>
+   <option value="https://moodle.uam.es/mod/resource/view.php?id=615773" selected="selected" style="background-image: url(https://moodle.uam.es/mod/resource/icon.gif);">Saltar a...</option>
+   <option value="https://moodle.uam.es/mod/resource/view.php?id=617955" style="background-image: url(https://moodle.uam.es/mod/resource/icon.gif);">EjemploPcapNext</option>
+   <option value="https://moodle.uam.es/mod/assignment/view.php?id=615783" style="background-image: url(https://moodle.uam.es/mod/assignment/icon.gif);">Entrega Practica 1</option>
+   </optgroup>   <optgroup label="Tema 7">   <option value="https://moodle.uam.es/mod/resource/view.php?id=636352" style="background-image: url(https://moodle.uam.es/mod/resource/icon.gif);">Práctica 2, sesiones 3/4/5: Sniffer/Analizador</option>
+   <option value="https://moodle.uam.es/mod/resource/view.php?id=636565" style="background-image: url(https://moodle.uam.es/mod/resource/icon.gif);">practica2.c</option>
+   <option value="https://moodle.uam.es/mod/assignment/view.php?id=636447" style="background-image: url(https://moodle.uam.es/mod/assignment/icon.gif);">Entrega Práctica 2</option>
+    </optgroup></select><input type="hidden" name="sesskey" value="Qz5tod8XWs"><div id="noscriptnavmenupopup" style="display: none;"><input type="submit" value="Ir"></div><script type="text/javascript">
+//<![CDATA[
+document.getElementById("noscriptnavmenupopup").style.display = "none";
+//]]>
+</script></div></form></li><li><form action="https://moodle.uam.es/mod/resource/view.php" onclick="this.target=&#39;_top&#39;;"><fieldset class="invisiblefieldset"><input type="hidden" name="id" value="617955"><button type="submit" title="Actividad siguiente"><span class="accesshide ">Actividad siguiente&nbsp;</span><span class="arrow ">►</span></button></fieldset></form></li></ul>
+</div></div>
+    </div>    <div class="navbar clearfix">
+        <div class="breadcrumb"><h2 class="accesshide ">Usted está aquí</h2> <ul>
+<li class="first"><a onclick="this.target=&#39;_top&#39;" href="https://moodle.uam.es/">e-learning UAM</a></li><li> <span class="accesshide ">/&nbsp;</span><span class="arrow sep">►</span> <a onclick="this.target=&#39;_top&#39;" href="https://moodle.uam.es/course/view.php?id=29346">2013_17835_*</a></li><li> <span class="accesshide ">/&nbsp;</span><span class="arrow sep">►</span> <a onclick="this.target=&#39;_top&#39;" href="https://moodle.uam.es/mod/resource/index.php?id=29346">Recursos</a></li><li> <span class="accesshide ">/&nbsp;</span><span class="arrow sep">►</span> Práctica 1, sesión 2: Introducción a Libpcap</li></ul></div>
+        <div class="navbutton">&nbsp;</div>
+    </div>
+    <!-- END OF HEADER -->
+    <div id="content"><div class="box generalbox generalboxcontent boxaligncenter clearfix">
+<h1 align="JUSTIFY" lang="es-ES" class="western">Práctica 1, sesión 2: Introducción a Libpcap<span class="dimmed_text"></span></h1>
+<p align="JUSTIFY" lang="es-ES" style="margin-bottom: 0in;"><br> </p>
+<h2 align="JUSTIFY" lang="es-ES" class="western">Objetivos de la práctica</h2>
+<p align="JUSTIFY" lang="es-ES" style="margin-bottom: 0in;"><font face="Times New Roman, serif"><font size="2" style="font-size: 11pt;">Familiarizarse con la libreria libpcap: esta librería libpcap nos permite capturar paquetes, filtrarlos, modificarlos y estudiarlos desde un programa C. Puede interpretarse que Wireshark sirve como front-end de esta libreria*. </font></font> </p>
+<p align="JUSTIFY" lang="es-ES" style="margin-bottom: 0in;"><br> </p>
+<h2 align="JUSTIFY" lang="es-ES" class="western">Introducción</h2>
+<p align="JUSTIFY" lang="es-ES" style="margin-bottom: 0in;"><font face="Times New Roman, serif"><font size="2" style="font-size: 11pt;">Existen multitud de recursos en Internet para aprender a usar lipcap en detalle:</font></font></p>
+<ul>
+  <li>
+    <p align="JUSTIFY" style="margin-bottom: 0in;"><a href="http://eecs.wsu.edu/~sshaikot/docs/lbpcap/libpcap-tutorial.pdf"><font size="2" style="font-size: 11pt;"><span lang="es-ES"><span style="font-weight: normal;">Packet Capture With libpcap and other Low Level Network Tricks</span></span></font></a><font face="Times New Roman, serif"><font size="2" style="font-size: 11pt;"><span lang="es-ES"><span style="font-weight: normal;"> </span></span></font></font><font face="Times New Roman, serif"><font size="2" style="font-size: 11pt;"><span lang="es-ES"><span style="font-weight: normal;">d</span></span></font></font><font face="Times New Roman, serif"><font size="2" style="font-size: 11pt;"><span lang="es-ES"><span style="font-weight: normal;">e NAU's Computer Systems Engineering.</span></span></font></font></p> </li>
+  <li>
+    <p align="JUSTIFY" style="margin-bottom: 0in;"><a href="http://www.e-ghost.deusto.es/docs/2005/conferencias/pcap.pdf"><font face="Times New Roman, serif"><font size="2" style="font-size: 11pt;"><span lang="es-ES"><span style="font-weight: normal;">Aprendiendo a programar con Libpcap</span></span></font></font></a><font face="Times New Roman, serif"><font size="2" style="font-size: 11pt;"><span lang="es-ES"><span style="font-weight: normal;"> de Alejandro Lopez Monge. </span></span></font></font> </p> </li>
+</ul>
+<p align="JUSTIFY" lang="es-ES" style="margin-bottom: 0in;"><br> </p>
+<p align="JUSTIFY" lang="es-ES" style="margin-bottom: 0in;"><font face="Times New Roman, serif"><font size="2" style="font-size: 11pt;">A continuación se explican las funciones básicas y necesarias para realizar las prácticas.</font></font></p>
+<p align="JUSTIFY" lang="es-ES" style="margin-bottom: 0in;"><br> </p>
+<p align="JUSTIFY" style="margin-bottom: 0in;"><font face="Times New Roman, serif"><font size="2" style="font-size: 11pt;"><span lang="es-ES">Recuerde usar la VM facilitada en la primera práctica, y trabaje en el entorno como se explic</span></font></font><font face="Times New Roman, serif"><font size="2" style="font-size: 11pt;"><span lang="es-ES">ó</span></font></font><font face="Times New Roman, serif"><font size="2" style="font-size: 11pt;"><span lang="es-ES"> en la primera sesión (</span></font></font><a href="http://www.masgdtic.uam.es/masgdtic/epsslax.iso">http://www.masgdtic.uam.es/masgdtic/epsslax.iso</a>, <a href="https://www.dropbox.com/s/lbhz5kojuwa8tly/epsslax.iso"><span lang="es-ES">https://www.dropbox.com/s/lbhz5kojuwa8tly/epsslax.iso</span></a><font face="Times New Roman, serif"><font size="2" style="font-size: 11pt;"><span lang="es-ES">).</span></font></font></p>
+<p align="JUSTIFY" lang="es-ES" style="margin-bottom: 0in;"><font face="Times New Roman, serif"><font size="2" style="font-size: 11pt;">Use como entorno de programación </font></font><font face="Times New Roman, serif"><font size="2" style="font-size: 11pt;">K</font></font><font face="Times New Roman, serif"><font size="2" style="font-size: 11pt;">D</font></font><font face="Times New Roman, serif"><font size="2" style="font-size: 11pt;">evelope, </font></font><font face="Times New Roman, serif"><font size="2" style="font-size: 11pt;">el entorno está incluido en la VM facilitada. Si no conoce el entorno realice antes de continuar la tarea </font></font><font face="Times New Roman, serif"><font size="2" style="font-size: 11pt;">Moodle </font></font><font face="Times New Roman, serif"><font size="2" style="font-size: 11pt;">titulada “KDevelope”.</font></font></p>
+<p align="JUSTIFY" lang="es-ES" style="margin-bottom: 0in;"><br> </p>
+<p align="JUSTIFY" lang="es-ES"><font face="Times New Roman, serif"><font size="2" style="font-size: 11pt;">Veamos primero las funciones básicas que nos permite la libpcap:</font></font></p>
+<h3 align="JUSTIFY" lang="es-ES" class="western">Abrir un fichero pcap</h3>
+<p align="JUSTIFY" lang="es-ES" style="margin-bottom: 0in;">Para abrir un fichero previamente capturado:</p>
+<p align="JUSTIFY" lang="es-ES" style="margin-bottom: 0in;"><font color="#000000"><i>pcap_t *pcap_open_offline(const char *fname, char *errbuf);</i></font></p>
+<p align="JUSTIFY" lang="es-ES" style="margin-bottom: 0in;"><font color="#000000">Donde</font></p>
+<ul>
+  <li>
+    <p align="JUSTIFY" lang="es-ES" style="margin-bottom: 0in;">fname es el nombre del fichero pcap que se desea abrir.</p> </li>
+</ul>
+<ul>
+  <li>
+    <p align="JUSTIFY" lang="es-ES" style="margin-bottom: 0in;">En errbuf se guarda el mensaje de error, si procede.</p> </li>
+  <li>
+    <p align="JUSTIFY" lang="es-ES" style="margin-bottom: 0in;">La función nos devuelve el puntero al descriptor de fichero pcap.</p> </li>
+</ul>
+<p align="JUSTIFY" lang="es-ES" style="margin-bottom: 0in;"><br> </p>
+<p align="JUSTIFY" lang="es-ES" style="margin-bottom: 0in;">Ejemplo</p>
+<p align="JUSTIFY" lang="es-ES" style="margin-bottom: 0in;">p=pcap_open_offline(“traza.pcap”, errbuf);</p>
+<p align="JUSTIFY" lang="es-ES" style="margin-bottom: 0in;">Abre para lectura el fichero traza.pcap. En caso de error, guarda el mensaje en la cadena errbuf.</p>
+<p align="JUSTIFY" lang="es-ES" style="margin-bottom: 0in;"><br> </p>
+<h3 align="JUSTIFY" lang="es-ES" class="western">Capturar de un interfaz</h3>
+<p align="JUSTIFY" lang="es-ES" style="margin-bottom: 0in;">Para abrir un interfaz para captura:</p>
+<p align="LEFT" lang="es-ES" style="margin-bottom: 0in;"><i>pcap_t *pcap_open_live(const char *device, int snaplen,int promisc, int to_ms, char *errbuf);</i></p>
+<p align="JUSTIFY" lang="es-ES" style="margin-bottom: 0in;">Donde </p>
+<ul>
+  <li>
+    <p align="JUSTIFY" lang="es-ES" style="margin-bottom: 0in;">device es el nombre de la interfaz que se quiere abrir (eth0, eth1...)</p> </li>
+  <li>
+    <p align="JUSTIFY" lang="es-ES" style="margin-bottom: 0in;">snaplen es la cantidad de bytes que se quieren guardar por cada paquete. Es útil cuando no nos interesa la carga útil del paquete y así reduciríamos el tamaño de la captura. </p> </li>
+  <li>
+    <p align="JUSTIFY" lang="es-ES" style="margin-bottom: 0in;">promisc indica si queremos abrirla en modo promiscuo (promisc=1) o no (promisc=0).</p> </li>
+  <li>
+    <p align="JUSTIFY" lang="es-ES" style="margin-bottom: 0in;">to_ms duración del timeout de lectura. Tiempo que se espera para leer varios paquetes en una misma transacción. </p> </li>
+  <li>
+    <p align="JUSTIFY" lang="es-ES" style="margin-bottom: 0in;">En errbuf se guarda el mensaje de error, si procede.</p> </li>
+  <li>
+    <p align="JUSTIFY" lang="es-ES" style="margin-bottom: 0in;">La función nos devuelve el puntero al descriptor de fichero pcap.</p> </li>
+</ul>
+<p align="JUSTIFY" lang="es-ES" style="margin-bottom: 0in;">para abrir una interfaz es necesario tener permisos de superusuario, en la VM facilitada el usuario por defecto es superusuario.</p>
+<p align="JUSTIFY" lang="es-ES" style="margin-bottom: 0in;"><br> </p>
+<p align="JUSTIFY" lang="es-ES" style="margin-bottom: 0in;">Ejemplo</p>
+<p align="JUSTIFY" lang="es-ES" style="margin-bottom: 0in;">descr=pcap_open_live(“eth0”,BUFSIZ,0, 0, errbuf);</p>
+<p align="JUSTIFY" lang="es-ES" style="margin-bottom: 0in;">Abre para la interfaz eth0 en modo no promiscuo, capturando el paquete en su totalidad, con un timeout de lectura de 100 ms. (puede que la VM le alerte sobre la imposibilidad de cpaturar tráfico de modo promiscuo, no es importante para la realización de las prácticas, acepte y continue).</p>
+<p align="JUSTIFY" lang="es-ES" style="margin-bottom: 0in;">En caso de error, guarda el mensaje en la cadena errbuf.</p>
+<p align="JUSTIFY" lang="es-ES" style="margin-bottom: 0in;"><br> </p>
+<h3 align="JUSTIFY" lang="es-ES" class="western">Leer fichero o interfaz</h3>
+<p align="JUSTIFY" lang="es-ES" style="margin-bottom: 0in;"><i>const u_char *pcap_next(pcap_t *descr, struct pcap_pkthdr *h);</i></p>
+<p align="JUSTIFY" lang="es-ES" style="margin-bottom: 0in;">Donde</p>
+<ul>
+  <li>
+    <p align="JUSTIFY" lang="es-ES" style="margin-bottom: 0in;">descr es el puntero a descriptor de fichero del que queramos leer (que anteriormente hemos abierto con open_pcap_live o open_pcap_offline).</p> </li>
+  <li>
+    <p align="JUSTIFY" lang="es-ES" style="margin-bottom: 0in;">h es la cabecera pcap del paquete. Esta cabecera es un struct con cuatro campos:</p>
+    <ul>
+      <li>
+        <p align="JUSTIFY" lang="es-ES" style="margin-bottom: 0in;">h-&gt;ts.tv_sec, timestamp del paquete en segundos.</p> </li>
+      <li>
+        <p align="JUSTIFY" lang="es-ES" style="margin-bottom: 0in;">h-&gt;ts.tv_usec, timestamp del paquete en microsegundos.</p> </li>
+      <li>
+        <p align="JUSTIFY" lang="es-ES" style="margin-bottom: 0in;">h-&gt;len: longitud real del paquete</p> </li>
+      <li>
+        <p align="JUSTIFY" lang="es-ES" style="margin-bottom: 0in;">h-&gt;caplen: longitud capturada del paquete. Esto es, el puntero que nos devuelve sólo contiene h-&gt;caplen bytes.</p> </li>
+    </ul> </li>
+</ul>
+<ul>
+  <li>
+    <p align="JUSTIFY" lang="es-ES" style="margin-bottom: 0in;">La función nos devuelve el puntero al inicio del paquete. En el caso de abrir un interfaz, es una espera bloqueante</p> </li>
+</ul>
+<p align="JUSTIFY" lang="es-ES" style="margin-bottom: 0in;"><br> </p>
+<p align="JUSTIFY" lang="es-ES" style="margin-bottom: 0in;">Ejemplo</p>
+<p align="JUSTIFY" lang="es-ES" style="margin-bottom: 0in;">packet = (u_int8_t *) pcap_next (descr, &amp;h);</p>
+<p align="JUSTIFY" lang="es-ES" style="margin-bottom: 0in;"><br> </p>
+<p align="JUSTIFY" lang="es-ES" style="margin-bottom: 0in;">Hay otras funciones para leer paquetes basadas en bucles, del tipo pcap_loop(·), no las use en las prácticas.</p>
+<p align="JUSTIFY" lang="es-ES" style="margin-bottom: 0in;"><br> </p>
+<h3 align="JUSTIFY" lang="es-ES" class="western">Guardar fichero pcap</h3>
+<p align="JUSTIFY" lang="es-ES" style="margin-bottom: 0in;">Para guardar un fichero pcap necesitamos primero crear el fichero donde vamos a ir volcando los paquetes. Para ello se usan la funciones pcap_open_dead y pcap_dump_open:</p>
+<p align="JUSTIFY" lang="es-ES" style="margin-bottom: 0in;"><i>pcap_t *pcap_open_dead(int linktype, int snaplen);</i></p>
+<p align="JUSTIFY" lang="es-ES" style="margin-bottom: 0in;"><br> </p>
+<p align="JUSTIFY" lang="es-ES" style="margin-bottom: 0in;">Donde</p>
+<ul>
+  <li>
+    <p align="JUSTIFY" lang="es-ES" style="margin-bottom: 0in;">linktype es el tipo de enlace de los paquetes que vamos a guardar. Típicamente, redes Ethernet: DLT_EN10MB</p> </li>
+  <li>
+    <p align="JUSTIFY" lang="es-ES" style="margin-bottom: 0in;">snaplen es el tamaño máximo de los paquetes que queramos guardar.</p> </li>
+  <li>
+    <p align="JUSTIFY" lang="es-ES" style="margin-bottom: 0in;">Devuelve, como las otras funciones pcap_open, el puntero al descriptor de fichero pcap.</p> </li>
+</ul>
+<p align="JUSTIFY" lang="es-ES" style="margin-bottom: 0in;"><br> </p>
+<p align="JUSTIFY" lang="es-ES" style="margin-bottom: 0in;">Ejemplo</p>
+<p align="JUSTIFY" lang="es-ES" style="margin-bottom: 0in;">descr2=pcap_open_dead(DLT_EN10MB,1514);</p>
+<p align="JUSTIFY" lang="es-ES" style="margin-bottom: 0in;">Abre un descriptor de fichero pcap para paquetes Ethernet, guardando como máximo 1514 Bytes de cada paquete.</p>
+<p align="JUSTIFY" lang="es-ES" style="margin-bottom: 0in;"><i>pcap_dumper_t *pcap_dump_open(pcap_t *descr, const char *fname);</i></p>
+<p align="JUSTIFY" lang="es-ES" style="margin-bottom: 0in;">Donde</p>
+<ul>
+  <li>
+    <p align="JUSTIFY" lang="es-ES" style="margin-bottom: 0in;">descr es el descriptor de fichero pcap previamente abierto con pcap_open_dead.</p> </li>
+  <li>
+    <p align="JUSTIFY" lang="es-ES" style="margin-bottom: 0in;">Fname es el nombre del fichero pcap en el que queramos guardar los paquetes.</p> </li>
+  <li>
+    <p align="JUSTIFY" lang="es-ES" style="margin-bottom: 0in;">Devuelve el puntero a fichero pcap donde se van a volcar los paquetes.</p> </li>
+</ul>
+<p align="JUSTIFY" lang="es-ES" style="margin-bottom: 0in; text-decoration: none;"> Ejemplos</p>
+<p align="JUSTIFY" lang="es-ES" style="margin-bottom: 0in;"><i>pdumper=pcap_dump_open(descr2,"salida.pcap");</i></p>
+<p align="JUSTIFY" lang="es-ES" style="margin-bottom: 0in;">Crea un fichero llamado salida.pcap con las características (tipo de enlace, y tamaño máximo de paquete) de descr2 (que indicamos en el pcap_open_dead). Nos devuelve el puntero a fichero de volcado de paquetes que vamos a utilizar para guardar los paquetes.</p>
+<p align="JUSTIFY" lang="es-ES" style="margin-bottom: 0in;"><br> </p>
+<p align="JUSTIFY" lang="es-ES" style="margin-bottom: 0in;"><br> </p>
+<p align="JUSTIFY" lang="es-ES" style="margin-bottom: 0in;">Para guardar paquetes en el fichero creado con pcap_dump_open usamos la función:</p>
+<p align="JUSTIFY" lang="es-ES" style="margin-bottom: 0in;"><i>void pcap_dump(u_char *user, struct pcap_pkthdr *h,u_char *sp);</i></p>
+<ul>
+  <li>
+    <p align="JUSTIFY" lang="es-ES" style="margin-bottom: 0in;">user es el puntero devuelto por pcap_dump_open.</p> </li>
+  <li>
+    <p align="JUSTIFY" lang="es-ES" style="margin-bottom: 0in;">h es la cabecera pcap del paquete que vamos a guardar.</p> </li>
+  <li>
+    <p align="JUSTIFY" lang="es-ES" style="margin-bottom: 0in;">sp es el puntero al paquete. Se van a guardar tantos bytes como indiquemos en el campo caplen del parámetro h.</p> </li>
+</ul>
+<p align="JUSTIFY" lang="es-ES" style="margin-bottom: 0in;"><br> </p>
+<p align="JUSTIFY" lang="es-ES" style="margin-bottom: 0in; text-decoration: none;"> Ejemplo</p>
+<p align="JUSTIFY" lang="es-ES" style="margin-bottom: 0in;">pcap_dump(pdumper,&amp;h,packet);</p>
+<p align="JUSTIFY" lang="es-ES" style="margin-bottom: 0in;">guardamos en pdumper el paquete apuntado por packet con cabecera h.</p>
+<p align="JUSTIFY" lang="es-ES" style="margin-bottom: 0in;"><br> </p>
+<h3 align="JUSTIFY" lang="es-ES" class="western">Cerrar Fichero</h3>
+<p align="JUSTIFY" lang="es-ES" style="margin-bottom: 0in;">Los descriptores abiertos con pcap_open_live, pcap_open_offline y pcap_open_dead se cierran con pcap_close.</p>
+<p align="JUSTIFY" lang="es-ES" style="margin-bottom: 0in;">Mientras que los ficheros abiertos con pcap_dump_open se cierran con pcap_dump_close.</p>
+<p align="JUSTIFY" lang="es-ES" style="margin-bottom: 0in;"><i>void pcap_close(pcap_t *descr);</i></p>
+<ul>
+  <li>
+    <p align="JUSTIFY" lang="es-ES" style="margin-bottom: 0in;">Donde descr es el descriptor a cerrar</p> </li>
+</ul>
+<p align="JUSTIFY" lang="es-ES" style="margin-bottom: 0in;"><i>void pcap_dump_close(pcap_dumper_t *p);</i></p>
+<ul>
+  <li>
+    <p align="JUSTIFY" lang="es-ES" style="margin-bottom: 0in;">Donde <font color="#000000">descr</font> es el <font color="#000000">descriptor</font> a cerrar</p> </li>
+</ul>
+<p align="JUSTIFY" lang="es-ES" style="margin-bottom: 0in;"><br> </p>
+<h3 lang="es-ES" class="western">Definicion de tipos</h3>
+<p align="JUSTIFY" lang="es-ES" style="margin-bottom: 0in;">Es muy importante trabajar con tipos sin signo con <b>tamañ</b><b>o</b><b> definido</b> ( <font color="#000000">u_int8_t, u_int16_t, u_int32_t, </font><font color="#000000">etc... de </font><span style="font-family: arial,helvetica,sans-serif;"><b>stdint.h</b></span><font color="#000000">) con objeto de controlar su tamaño de forma precisa </font><font color="#000000">al realizar operacion binarias</font><font color="#000000">. </font> </p>
+<p align="JUSTIFY" lang="es-ES" style="margin-bottom: 0in;"><br> </p>
+<h3 lang="es-ES" class="western">Programa Ejemplo</h3>
+<p align="JUSTIFY" lang="es-ES" style="margin-bottom: 0in;">Se facilita un programa ejemplo en el Moodle descargueselo, analicelo y modifiquelo para que cumpla los requistos definidos a continuación.</p>
+<p align="JUSTIFY" lang="es-ES" style="margin-bottom: 0in;"><br> </p>
+<h3 lang="es-ES" class="western">Ejercicio</h3>
+<h4 lang="es-ES" class="western">1.- Entregue los fuentes C (.c y .h) usados para implementar un programa C basado en lipcap que:</h4>
+<ul>
+  <li>
+    <p lang="es-ES"><a name="__DdeLink__525_1906733401"></a><a name="__DdeLink__521_1906733401"></a> Muestre el número de paquetes recividos por la interfaz de red eth0 trás pulsar control-c.</p> </li>
+  <li>
+    <p lang="es-ES">Muestre el número de paquetes de una traza/captura de red cuando se le da como primer argumento la ruta a una traza pcap.</p> </li>
+  <li>
+    <p lang="es-ES">Muestre los 10 primeros bytes de cada paquete capturado/analizado en una linea.</p> </li>
+  <li>
+    <p lang="es-ES">Puede utilizar la herramienta Ditribution &amp; Publishing del menu Project de Kdevelope para generar un fichero comprimido con los fuentes de la práctica. Este fichero debe ser subido a Moodle.</p> </li>
+</ul>
+<p align="JUSTIFY" lang="es-ES" style="margin-bottom: 0in;">No use funciones del tipo pcap_loop.</p>
+<p align="JUSTIFY" lang="es-ES" style="margin-bottom: 0in;">Llame al proyecto Practica1.</p>
+<h4>2.- Adicionalmente haga una captura de pantalla que muestre a la vez la salida de su programa y el parseo de Wireshark para una traza que contenga unos pocos paquetes. <br></h4>
+<p>Se espera que no haya diferencias. Llame a esta captura de pantalla Practica1captura.*, y subala a Moodle.</p>
+<p> </p>
+<p align="JUSTIFY" lang="es-ES" style="margin-bottom: 0in;"><br> </p>
+<p align="JUSTIFY" lang="es-ES" style="margin-bottom: 0in;"><br> </p>
+<h3 lang="es-ES" class="western">Criterios de evaluación</h3>
+<p align="JUSTIFY" lang="es-ES" style="margin-bottom: 0in;"><a name="__DdeLink__529_1906733401"></a> · Ejercicio: 50% (en caso de considerarse apto el cuestionario): <span style="font-weight: normal;">Entrega </span><span style="font-weight: normal;">durante </span><span style="font-weight: normal;"> la semana del 30Sep-6Oct</span> (cada grupo en el día anterior a su sesión de prácticas).</p>
+<blockquote>
+  <p align="JUSTIFY" lang="es-ES" style="margin-bottom: 0in;"> Contar paquetes de la interfaz de red: 20%</p></blockquote>
+<blockquote>
+  <p align="JUSTIFY" lang="es-ES" style="margin-bottom: 0in;"> Contar paquetes de una traza: 20%</p></blockquote>
+<blockquote>
+  <p align="JUSTIFY" lang="es-ES" style="margin-bottom: 0in;"> Formar una traza pcap capturando de la interfaz de red: 30%</p></blockquote>
+<blockquote>
+  <p align="JUSTIFY" lang="es-ES" style="margin-bottom: 0in;"> Imprimir los 10 primeros bytes de un paquete y validarlo con Wireshark (capturas de pantalla): 30%</p></blockquote>
+<p align="JUSTIFY" lang="es-ES" style="margin-bottom: 0in;">· Cuestionario individual: 50%. Breve cuestionario sobre manejo básico de Wireshark y libpcap en la semana del <span style="font-weight: normal;">30Sep-6Oct.</span></p>
+<p align="JUSTIFY" lang="es-ES" style="margin-bottom: 0in;"><br> </p>
+<p align="JUSTIFY" lang="es-ES" style="margin-bottom: 0in;"><br> </p>
+<p align="JUSTIFY" lang="es-ES" style="margin-bottom: 0in;"><br> </p> </div><div class="modified">Última modificación:  miércoles,  25 de septiembre de 2013, 21:54</div></div><div id="footer"><p class="helplink"></p><hr><div class="logininfo">Ud. está en el sistema como <a href="https://moodle.uam.es/user/view.php?id=79056&course=29346">Victor de Juan Sanz</a>.  (<a href="https://moodle.uam.es/login/logout.php?sesskey=Qz5tod8XWs">Salir</a>)</div><div class="homelink"><a href="https://moodle.uam.es/course/view.php?id=29346">2013_17835_*</a></div></div>
+</div>
+
+
+<script id="hiddenlpsubmitdiv" style="display: none;"></script><script>try{for(var lastpass_iter=0; lastpass_iter < document.forms.length; lastpass_iter++){ var lastpass_f = document.forms[lastpass_iter]; if(typeof(lastpass_f.lpsubmitorig2)=="undefined"){ lastpass_f.lpsubmitorig2 = lastpass_f.submit; lastpass_f.submit = function(){ var form=this; var customEvent = document.createEvent("Event"); customEvent.initEvent("lpCustomEvent", true, true); var d = document.getElementById("hiddenlpsubmitdiv"); for(var i = 0; i < document.forms.length; i++){ if(document.forms[i]==form){ d.innerText=i; } } d.dispatchEvent(customEvent); form.lpsubmitorig2(); } } }}catch(e){}</script></body></html>
