@@ -5,12 +5,10 @@ gcc -o practica2 practica2.c -lpcap
 
 #include <stdio.h>
 #include <stdlib.h>
-
+#include <inttypes.h>
 #include <pcap.h>
 #include <string.h>
 #include <netinet/in.h>
-#include <linux/udp.h>
-#include <linux/tcp.h>
 #include <signal.h>
 #include <time.h>
 
@@ -34,57 +32,63 @@ pcap_t* descr;
 u_int64_t cont=1;
 
 void handleSignal(int nsignal){
-	printf("Control C pulsado (%lu)\n", cont);
+	printf("Control C pulsado (%" PRIu64 ")\n", cont);
 	pcap_close(descr);
 	exit(OK);
 }
 
 int main(int argc, char **argv)
 {
-	
 	char errbuf[PCAP_ERRBUF_SIZE];
 	u_int8_t* paquete;
-	struct pcap_pkthdr cabecera;
+	struct pcap_pkthdr* cabecera;
 	u_int8_t retorno;
-	
-	if(signal(SIGINT,handleSignal)==SIG_ERR){
+	int capture_retval;
+	int retval = OK;
+
+	if(signal(SIGINT,handleSignal)==SIG_ERR)
+	{
 		printf("Error: Fallo al capturar la senal SIGINT.\n");
 		exit(ERROR);
 	}
 
-	if(argc!=2){
+	if(argc != 2)
+	{
 		printf("Ejecucion: %s /ruta/captura_pcap\n",argv[0]);
 		exit(ERROR);
 	}
 
-   	if ( (descr = pcap_open_offline(argv[1], errbuf)) == NULL){
+   	if ( (descr = pcap_open_offline(argv[1], errbuf)) == NULL)
+   	{
 		printf("Error: pcap_open_offline(): File: %s, %s %s %d.\n", argv[1], errbuf,__FILE__,__LINE__);
 		exit(ERROR);
 	}
 
-	if ( (paquete = (u_int8_t*) pcap_next(descr,&cabecera)) ==NULL){
-			printf("Error al capturar al capturar trafico; %s %d.\n",__FILE__, __LINE__);
-			exit(ERROR);
-	}else{
-		if( (retorno=analizarPaquete(paquete, &cabecera,cont))==ERROR){
-			printf("Error al analizar el primer paquete; %s %d.\n",__FILE__, __LINE__);
-			exit(ERROR);
-		}
-	}
-
-	while( (paquete = (u_int8_t*) pcap_next(descr,&cabecera)) !=NULL){
+	while((capture_retval = pcap_next_ex(descr, &cabecera, (const u_char **) (&paquete))) == 1)
+	{
 		cont++;
 
-		if( (retorno=analizarPaquete(paquete, &cabecera,cont)) ==ERROR){
-			printf("Error al analizar el paquete %lu; %s %d.\n",__FILE__, __LINE__);
-			exit(ERROR);
+		if((retorno = analizarPaquete(paquete, cabecera, cont)) != OK){
+			printf("Error al analizar el paquete %" PRIu64 "; %s %d.\n", cont, __FILE__, __LINE__);
+			exit(retorno);
 		}
 	}
 
-	printf("No hay mas paquetes (%lu).\n\n",cont, __FILE__, __LINE__);
+	if(capture_retval == -1)
+	{
+		printf("Error: pcap_open_offline(): File: %s, %s %s %d.\n", argv[1], errbuf,__FILE__,__LINE__);
+		pcap_perror(descr, "pcap error:");
+
+		retval = ERROR;
+	}
+	else // PCAP_ERROR_BREAK es la otra salida posible, hemos llegado a final de archivo.
+	{
+		printf("No hay mas paquetes.\n Capturados %" PRIu64 " paquetes.\n\n",cont);
+	}
+
 	pcap_close(descr);
 
-	return OK;
+	return retval;
 }
 
 u_int8_t analizarPaquete(u_int8_t* paquete,struct pcap_pkthdr* cabecera,u_int64_t cont){
