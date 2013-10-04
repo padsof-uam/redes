@@ -95,6 +95,8 @@ u_int8_t analizarPaquete(u_int8_t* paquete,struct pcap_pkthdr* cabecera,u_int64_
 	
 	int i=0;
 	u_int8_t* paquete_bck=paquete;
+	u_int8_t IP_version = 0;
+	u_int16_t eth_type;
 
 	printf("Direccion ETH destino= ");	
 	printf("%02X",paquete[i]);
@@ -110,10 +112,38 @@ u_int8_t analizarPaquete(u_int8_t* paquete,struct pcap_pkthdr* cabecera,u_int64_
 	}
 	printf("\n");
 
-	//paquete+=ETH_ALEN;
-	// .....
-	// .....
-	// .....
+	paquete+=ETH_ALEN;
+	printf("\n");
+	printf("Tipo ETH = ");
+
+	memcpy(&eth_type, paquete, 2);
+	eth_type= ntohs(eth_type);
+	printf("%04X",eth_type);
+	//memcpy(aux,"")
+
+	if (eth_type != 2048)
+	{
+		printf("El tipo ethernet no es válido\n");
+		return OK;
+	}
+	paquete += ETH_TLEN;
+
+	//Fin encapsulamiento Ethernet
+
+	//IP: version IP, longitud de cabecera, longitud total, posicion, tiempo de vida, protocolo, y ambas direcciones IP
+	printf("\n");
+	
+	IP_version = paquete[0]/16;
+
+	printf("Versión IP: %d", IP_version);
+
+	paquete += 2;
+
+	printf("\n");
+	printf("Longitud total: %02X:%02X",paquete[0],paquete[1]);
+	
+	
+
 
 	printf("\n\n");
 	return OK;
