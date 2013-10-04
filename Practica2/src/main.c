@@ -29,7 +29,7 @@ u_int8_t analizarPaquete(u_int8_t*,struct pcap_pkthdr*,u_int64_t);
 void handleSignal(int nsignal);
 
 pcap_t* descr;
-u_int64_t cont=1;
+u_int64_t cont = 0;
 
 void handleSignal(int nsignal){
 	printf("Control C pulsado (%" PRIu64 ")\n", cont);
