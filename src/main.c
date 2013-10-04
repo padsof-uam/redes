@@ -23,18 +23,32 @@ gcc -o EjemploPcapNext EjemploPcapNext.c -lpcap
 
 #define HEAD_SIZE 10
 
-volatile sig_atomic_t ctr_pressed = 0;
+
+// Demasiada variable global pululando.
+static pcap_t *_iface_capturer = NULL;
+static pcap_t *_dumpfile = NULL;
+static pcap_dumper_t *_dumper = NULL;
+static int _packet_count = 0;
+
+void close_handlers()
+{
+    if (_iface_capturer) pcap_close(_iface_capturer);
+    if (_dumper) pcap_dump_close(_dumper);
+    if (_dumpfile) pcap_close(_dumpfile);
+}
 
 void handle(int nsignal)
 {
-    ctr_pressed = 1;
+    close_handlers();
+    printf("Recibidos %d paquetes.\n", _packet_count);
+    exit(0);
 }
 
 void print_packet(struct pcap_pkthdr *header, u_char *packet)
 {
     int j;
 
-    printf("Paquete capturado. Imprimiendo diez primeros bytes: 0x");
+    printf("Paquete capturado. Diez primeros bytes: 0x");
 
     for (j = 0; j < header->caplen && j < HEAD_SIZE; j++)
         printf("%02x", packet[j]);
@@ -49,68 +63,62 @@ int live_capture()
 
     u_char *packet;
     struct pcap_pkthdr h;
-    pcap_t *eth0;
-    pcap_t *dump_descr;
-    pcap_dumper_t *dumper;
+    pcap_t *_iface_capturer;
+    pcap_t *_dumpfile;
+    pcap_dumper_t *_dumper;
     int result = OK;
 
     if (signal(SIGINT, handle) == SIG_ERR)
     {
         printf("Error: Fallo al capturar la senal SIGINT.\n");
-        result = ERROR;
-        goto cleanup;
+        close_handlers();
+        return ERROR;
     }
 
-    if ((eth0 = pcap_open_live("eth0", 10, 0, 0, errbuf)) == NULL)
+    if ((_iface_capturer = pcap_open_live("eth0", 10, 0, 0, errbuf)) == NULL)
     {
         printf("Error: pcap_open_live(): %s %s %d.\n", errbuf, __FILE__, __LINE__);
-        result = ERROR;
-        goto cleanup;
+        close_handlers();
+        return ERROR;
     }
 
-    //new
-    dump_descr = pcap_open_dead(DLT_EN10MB, 1514);
+    _dumpfile = pcap_open_dead(DLT_EN10MB, 1514);
 
-    if (!dump_descr)
+    if (!_dumpfile)
     {
         printf("Error: pcap_open_dead(): %s %s %d.\n", errbuf, __FILE__, __LINE__);
-        result = ERROR;
-        goto cleanup;
+        close_handlers();
+        return ERROR;
     }
 
-    dumper = pcap_dump_open(dump_descr, "out.pcap");
+    _dumper = pcap_dump_open(_dumpfile, "out.pcap");
 
-    if (!dumper)
+    if (!_dumper)
     {
         printf("Error: pcap_open_live(): %s %s %d.\n", errbuf, __FILE__, __LINE__);
-        result = ERROR;
-        goto cleanup;
+        close_handlers();
+        return ERROR;
     }
 
-    //unnew
     packet_count = 0;
 
-    while (!ctr_pressed)
+    while (1) // Seguimos recibiendo hasta que recibimos una señal.
     {
-        if ((packet = (u_int8_t *) pcap_next(eth0, &h)) == NULL)
+        if ((packet = (u_int8_t *) pcap_next(_iface_capturer, &h)) == NULL)
         {
             printf("Error al capturar el paquete %s %d.\n", __FILE__, __LINE__);
-            result = ERROR;
-            goto cleanup;
+            close_handlers();
+            return ERROR;
         }
 
         print_packet(&h, packet);
-        pcap_dump((u_char*) dumper, &h, packet);
+        pcap_dump((u_char *) _dumper, &h, packet);
 
-        packet_count++;
+        _packet_count++;
     }
-    printf("Recibidos %d paquetes.\n", packet_count);
 
-cleanup:
-    if (eth0) pcap_close(eth0);
-    if (dumper) pcap_dump_close(dumper);
-    if (dump_descr) pcap_close(dump_descr);
-
+    // No se llega nunca a esto, pero por si acaso.
+    close_handlers();
     return result;
 }
 
