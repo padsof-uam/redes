@@ -31,8 +31,11 @@ struct packet_val
 	} v;
 };
 
+typedef const char* (*informer)(const struct packet_val* val);
+
 int extract_bytes(const uint8_t* packet, int start, int num, uint8_t* dest);
 int extract(const uint8_t* packet, int bit_start, int num, struct packet_val* value);
 int printf_val(const struct packet_val* value, int len, format_type type);
 int print_packet_field(const uint8_t* packet, const char* title, int byte_start, int bit_offset, int bit_block_size, int length, format_type format);
+int print_packet_field_i(const uint8_t* packet, const char* title, int byte_start, int bit_offset, int bit_block_size, int length, format_type format, informer f_inf);
 #endif

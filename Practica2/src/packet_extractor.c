@@ -150,10 +150,16 @@ int printf_val(const struct packet_val *value, int len, format_type type)
     return 0;
 }
 
-int print_packet_field(const uint8_t *packet, const char *title, int byte_start, int bit_offset, int bit_block_size, int length, format_type format)
+int print_packet_field(const uint8_t* packet, const char* title, int byte_start, int bit_offset, int bit_block_size, int length, format_type format)
+{
+	return print_packet_field_i(packet, title, byte_start, bit_offset, bit_block_size, length, format, NULL);
+}
+
+int print_packet_field_i(const uint8_t* packet, const char* title, int byte_start, int bit_offset, int bit_block_size, int length, format_type format, informer f_inf)
 {
     struct packet_val value;
     int retval;
+    int datasize;
     value.size = bit_block_size;
 
     retval = extract(packet, byte_start * 8 + bit_offset, length, &value);
@@ -165,7 +171,17 @@ int print_packet_field(const uint8_t *packet, const char *title, int byte_start,
 
     printf_val(&value, length, format);
 
+    if(f_inf != NULL)
+    	printf(" (%s)", f_inf(&value));
+
     printf("\n");
 
-    return 0;
+    datasize = (bit_block_size * length) / 8;
+
+    if(datasize > 4)
+    	datasize = 4;
+
+    memcpy(&retval, value.v.uint8, datasize); // ¿Habrá que hacer un shift?
+
+    return retval;
 }
