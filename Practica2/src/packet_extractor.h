@@ -13,6 +13,7 @@
 
 #define MAX_VAL_LEN 20
 #define ERR_UNSUPPORTED_SIZE -10
+#define ERR_UNSUPPORTED_FORMAT -11
 #define FIELD_END -1
 typedef enum {
 	HEX, DEC
@@ -31,7 +32,6 @@ struct packet_val
 
 int extract_bytes(const uint8_t* packet, int start, int num, uint8_t* dest);
 int extract(const uint8_t* packet, int bit_start, int num, struct packet_val* value);
-int printf_hex(const struct packet_val* value, int len);
-int printf_dec(const struct packet_val* value, int len);
+int printf_val(const struct packet_val* value, int len, format_type type);
 int print_packet_field(const uint8_t* packet, const char* title, int byte_start, int bit_offset, int bit_block_size, int length, format_type format);
 #endif

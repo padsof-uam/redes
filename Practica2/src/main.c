@@ -103,7 +103,7 @@ u_int8_t analizarPaquete(u_int8_t* paquete, struct pcap_pkthdr* cabecera,u_int64
 
 	extract(paquete, ETH_ALEN * 2 * 8, 1, &eth_type);
 	printf("Tipo ETH:\t");
-	printf_hex(&eth_type, 1);
+	printf_val(&eth_type, 1, HEX);
 	printf("\n");
 
 	if (eth_type.v.uint16[0] != 2048)
