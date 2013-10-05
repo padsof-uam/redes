@@ -97,6 +97,7 @@ int main(int argc, char **argv)
 
 u_int8_t analizarPaquete(u_int8_t* paquete,struct pcap_pkthdr* cabecera,u_int64_t cont){
 	
+	int i=0;
 	u_int8_t* paquete_bck = paquete;
 	u_int8_t IP_version = 0,IP_header=0,IP_time=0,Protocol=0;
 	u_int8_t eth_dst[6];
@@ -134,6 +135,7 @@ u_int8_t analizarPaquete(u_int8_t* paquete,struct pcap_pkthdr* cabecera,u_int64_
 
 	//IP: version IP, longitud de cabecera, longitud total, posicion, tiempo de vida, protocolo, y ambas direcciones IP
 	printf("\n");
+	
 	extract(paquete, 0, 4, 1, &IP_version);
 	printf("Versión IP: %d\n", IP_version);
 
