@@ -180,6 +180,8 @@ int print_packet_field_i(const uint8_t* packet, const char* title, int byte_star
 
     if(datasize > 4)
     	datasize = 4;
+    else if (datasize == 0)
+    	datasize = 1;
 
     memcpy(&retval, value.v.uint8, datasize); // ¿Habrá que hacer un shift?
 

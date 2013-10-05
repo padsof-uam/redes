@@ -101,9 +101,9 @@ static const char *proto_informer(const struct packet_val *value)
 {
     switch (value->v.uint8[0])
     {
-	    case 6:
+	    case TCP:
 	        return "TCP";
-	    case 17:
+	    case UDP:
 	        return "UDP";
 	    default:
 	        return "Unknown";
@@ -130,7 +130,7 @@ u_int8_t analizarPaquete(u_int8_t *paquete, struct pcap_pkthdr *cabecera, u_int6
     paquete += ETH_ALEN * 2 + ETH_TLEN;
     //IP: version IP, longitud de cabecera, longitud total, posicion, tiempo de vida, protocolo, y ambas direcciones IP
     print_packet_field(paquete, "Versión IP", 0, 0, 4, 1, DEC);
-    ip_header_size = print_packet_field(paquete, "Long. header", 0, 4, 4, 1, HEX);
+    ip_header_size = print_packet_field(paquete, "Long. header", 0, 4, 4, 1, DEC);
     print_packet_field(paquete, "Longitud", 2, 0, 16, 1, DEC);
     print_packet_field(paquete, "Posición", 6, 3, 13, 1, DEC);
     print_packet_field(paquete, "TTL\t", 8, 0, 8, 1, DEC);
@@ -138,10 +138,16 @@ u_int8_t analizarPaquete(u_int8_t *paquete, struct pcap_pkthdr *cabecera, u_int6
     print_packet_field(paquete, "IP origen", 12, 0, 8, 4, DEC);
     print_packet_field(paquete, "IP destino", 16, 0, 8, 4, DEC);
 
-    paquete += ip_header_size;
+    paquete += ip_header_size * 4;
 
     print_packet_field(paquete, "Puerto origen", 0, 0, 16, 1, DEC);
     print_packet_field(paquete, "Puerto destino", 2, 0, 16, 1, DEC);
+
+    if(protocol == UDP)
+    {
+    	print_packet_field(paquete, "Long. UDP", 4, 0, 16, 1, DEC);
+    }
+
     printf("\n");
 
     return OK;
