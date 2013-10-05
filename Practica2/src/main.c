@@ -18,6 +18,8 @@ gcc -o practica2 practica2.c -lpcap
 #define ETH_ALEN      6      /* Tamano de direccion ethernet             */
 #define ETH_HLEN      14     /* Tamano de cabecera ethernet              */
 #define ETH_TLEN      2      /* Tamano del campo tipo ethernet           */
+#define TCP 6				 /* Protocolo TCP							 */
+#define UDP 17 				 /* Protocolo UDP							 */
 #define ETH_FRAME_MAX 1514   /* Tamano maximo trama ethernet (sin CRC)   */
 #define ETH_FRAME_MIN 60     /* Tamano minimo trama ethernet (sin CRC)   */
 
@@ -95,13 +97,13 @@ int main(int argc, char **argv)
 
 u_int8_t analizarPaquete(u_int8_t* paquete,struct pcap_pkthdr* cabecera,u_int64_t cont){
 	
-	int i=0;
 	u_int8_t* paquete_bck = paquete;
-	u_int8_t IP_version = 0;
+	u_int8_t IP_version = 0,IP_header=0,IP_time=0,Protocol=0;
 	u_int8_t eth_dst[6];
 	u_int8_t eth_src[6];
-	u_int16_t eth_type;
-	u_int16_t ip_size;
+	u_int16_t eth_type,IP_size,IP_position;
+	u_int8_t IP_source[4],IP_dest[4];
+	
 
 	printf("Direccion ETH destino= ");	
 	extract_bytes(paquete, 0, ETH_ALEN, eth_dst);
@@ -116,7 +118,7 @@ u_int8_t analizarPaquete(u_int8_t* paquete,struct pcap_pkthdr* cabecera,u_int64_
 	paquete += ETH_ALEN;
 
 	printf("Tipo ETH = ");
-	extract(paquete, 0, 16, 1, &eth_type);
+	extract_bytes(paquete, 0, 2, (void *)&eth_type);
 	eth_type= ntohs(eth_type);
 	printf("0x%04X",eth_type);
 
@@ -132,15 +134,65 @@ u_int8_t analizarPaquete(u_int8_t* paquete,struct pcap_pkthdr* cabecera,u_int64_
 
 	//IP: version IP, longitud de cabecera, longitud total, posicion, tiempo de vida, protocolo, y ambas direcciones IP
 	printf("\n");
-	
 	extract(paquete, 0, 4, 1, &IP_version);
 	printf("Versión IP: %d\n", IP_version);
 
+
+	extract(paquete, 4, 4, 1, &IP_header);
+	IP_header = IP_header*4;
+	printf("Tamaño de la cabecera: %d",IP_header);
+
 	paquete += 2;
-	extract(paquete, 0, 16, 1, &ip_size);
+
+	extract_bytes(paquete, 0,2, (void *)&IP_size);
 	printf("\n");
-	printf("Longitud total: %" PRIu16 "\n",ip_size);
+	IP_size=ntohs(IP_size);
+	printf("Longitud total: %" PRIu16 "\n",IP_size);
 	
+	paquete += 4;
+
+	extract_bytes(paquete, 0, 2, (void *)&IP_position);
+	IP_position = ntohs(IP_position)*8;
+	printf("Posicion IP: %"PRIu16"\n", IP_position);
+
+	paquete+=2;
+
+	extract_bytes(paquete, 0, 1, (void* )&IP_time);
+	/*
+	Lo he quitado porque así coincide con el wireshark. ¿No hay little endian ni big endian en enteros de 1 byte o que pasa?
+	IP_time = ntohs(IP_time);
+	*/
+	printf("Tiempo de vida: %"PRIu16"\n", IP_time);
+
+
+	paquete += 1;
+
+	extract_bytes(paquete, 0, 1, &Protocol);	
+	if (Protocol == TCP)	printf("Protocolo TCP\n");
+	else if (Protocol == UDP) printf("Protocolo UDP\n");
+	else printf("Protocolo desconocido.\n");
+
+	paquete+=3;
+
+	extract_bytes(paquete, 0, 4, (void *) &IP_source);
+	printf("Dirección IP origen: ");
+	for (int i = 0; i < 4; ++i)
+	{
+		printf("%d.", IP_source[i]);
+	}
+	 
+	paquete += 4;
+	printf("\n");
+	
+	extract_bytes(paquete, 0, 4, (void *) &IP_dest);
+	printf("Dirección IP destino: ");
+	for (int i = 0; i < 4; ++i)
+	{
+		printf("%d.", IP_dest[i]);
+	}
+	 
+
+
 
 
 	printf("\n\n");
