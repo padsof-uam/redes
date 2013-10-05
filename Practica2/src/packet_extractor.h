@@ -15,6 +15,7 @@
 #define ERR_UNSUPPORTED_SIZE -10
 #define ERR_UNSUPPORTED_FORMAT -11
 #define FIELD_END -1
+
 typedef enum {
 	HEX, DEC
 } format_type;

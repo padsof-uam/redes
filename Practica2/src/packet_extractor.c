@@ -141,6 +141,10 @@ int printf_val(const struct packet_val *value, int len, format_type type)
     }
 
     sprintf(format_str, "%%%s", format);
+
+    if(type == HEX && len == 1)
+    	printf("0x");
+
     _printf(value, format_str, len, separator);
 
     return 0;
