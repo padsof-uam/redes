@@ -140,6 +140,12 @@ u_int8_t analizarPaquete(u_int8_t *paquete, struct pcap_pkthdr *cabecera, u_int6
     print_packet_field(paquete, "IP origen", 12, 0, 8, 4, DEC);
     print_packet_field(paquete, "IP destino", 16, 0, 8, 4, DEC);
 
+    if(protocol != TCP && protocol != UDP)
+    {
+    	printf("Protocolo inválido.\n");
+    	return OK;
+    }
+
     paquete += ip_header_size * 4;
 
     print_packet_field(paquete, "Puerto origen", 0, 0, 16, 1, DEC);
