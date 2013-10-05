@@ -117,7 +117,11 @@ u_int8_t analizarPaquete(u_int8_t* paquete, struct pcap_pkthdr* cabecera,u_int64
 	//IP: version IP, longitud de cabecera, longitud total, posicion, tiempo de vida, protocolo, y ambas direcciones IP
 	print_packet_field(paquete, "Versión IP", 0, 0, 4, 1, DEC);
 	print_packet_field(paquete, "Longitud", 2, 0, 16, 1, DEC);
-
+	print_packet_field(paquete, "Posición", 6, 3, 13, 1, DEC);
+	print_packet_field(paquete, "TTL\t", 8, 0, 8, 1, DEC);
+	print_packet_field(paquete, "Protocolo", 9, 0, 8, 1, DEC);
+	print_packet_field(paquete, "IP Origen", 12, 0, 8, 4, DEC);
+	print_packet_field(paquete, "IP Origen", 16, 0, 8, 4, DEC);
 	printf("\n");
 	return OK;
 }
