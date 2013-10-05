@@ -29,6 +29,8 @@ gcc -o practica2 practica2.c -lpcap
 #define OK 0
 #define ERROR 1
 
+#define IP(a,b,c,d) (a << 3 + b << 2 + c << 1 + d)
+
 u_int8_t analizarPaquete(u_int8_t *, struct pcap_pkthdr *, u_int64_t);
 void handleSignal(int nsignal);
 
