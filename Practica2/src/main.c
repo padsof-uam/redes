@@ -34,7 +34,7 @@ pcap_t* descr;
 u_int64_t cont = 0;
 
 void handleSignal(int nsignal){
-	printf("Control C pulsado (%" PRIu64 ")\n", cont);
+	printf("Control-C pulsado (%" PRIu64 ")\n", cont);
 	pcap_close(descr);
 	exit(OK);
 }
@@ -93,56 +93,31 @@ int main(int argc, char **argv)
 	return retval;
 }
 
-u_int8_t analizarPaquete(u_int8_t* paquete,struct pcap_pkthdr* cabecera,u_int64_t cont){
-	
-	int i=0;
-	u_int8_t* paquete_bck = paquete;
-	u_int8_t IP_version = 0;
-	u_int8_t eth_dst[6];
-	u_int8_t eth_src[6];
-	u_int16_t eth_type;
-	u_int16_t ip_size;
+u_int8_t analizarPaquete(u_int8_t* paquete, struct pcap_pkthdr* cabecera,u_int64_t cont)
+{	
+	struct packet_val eth_type;
+	eth_type.size = 16;
 
-	printf("Direccion ETH destino= ");	
-	extract_bytes(paquete, 0, ETH_ALEN, eth_dst);
-	printf_hex(eth_dst, ETH_ALEN);
+	print_packet_field(paquete, "MAC destino", 0, 0, 8, ETH_ALEN, HEX);
+	print_packet_field(paquete, "MAC origen", ETH_ALEN, 0, 8, ETH_ALEN, HEX);
+
+	extract(paquete, ETH_ALEN * 2 * 8, 1, &eth_type);
+	printf("Tipo ETH:\t");
+	printf_hex(&eth_type, 1);
 	printf("\n");
-	paquete += ETH_ALEN;
 
-	printf("Direccion ETH origen = ");	
-	extract_bytes(paquete, 0, ETH_ALEN, eth_src);
-	printf_hex(eth_src, ETH_ALEN);
-	printf("\n\n");
-	paquete += ETH_ALEN;
-
-	printf("Tipo ETH = ");
-	extract(paquete, 0, 16, 1, &eth_type);
-	eth_type= ntohs(eth_type);
-	printf("0x%04X",eth_type);
-
-	if (eth_type != 2048)
+	if (eth_type.v.uint16[0] != 2048)
 	{
-		printf("\nEl tipo ethernet no es válido\n");
+		printf("El tipo ethernet no es válido\n\n");
 		return OK;
 	}
 
-	paquete += ETH_TLEN;
-
 	//Fin encapsulamiento Ethernet
-
+	paquete += ETH_ALEN * 2 + ETH_TLEN;
 	//IP: version IP, longitud de cabecera, longitud total, posicion, tiempo de vida, protocolo, y ambas direcciones IP
+	print_packet_field(paquete, "Versión IP", 0, 0, 4, 1, DEC);
+	print_packet_field(paquete, "Longitud", 2, 0, 16, 1, DEC);
+
 	printf("\n");
-	
-	extract(paquete, 0, 4, 1, &IP_version);
-	printf("Versión IP: %d\n", IP_version);
-
-	paquete += 2;
-	extract(paquete, 0, 16, 1, &ip_size);
-	printf("\n");
-	printf("Longitud total: %" PRIu16 "\n",ip_size);
-	
-
-
-	printf("\n\n");
 	return OK;
 }

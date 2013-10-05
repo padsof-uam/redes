@@ -1,2 +1,3 @@
 *.o
 *.sublime-workspace
+*/bin/*
