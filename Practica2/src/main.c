@@ -97,11 +97,10 @@ u_int8_t analizarPaquete(u_int8_t* paquete,struct pcap_pkthdr* cabecera,u_int64_
 	
 	int i=0;
 	u_int8_t* paquete_bck = paquete;
-	u_int8_t IP_version = 0;
+	u_int8_t IP_version = 0,IP_header=0;
 	u_int8_t eth_dst[6];
 	u_int8_t eth_src[6];
-	u_int16_t eth_type;
-	u_int16_t ip_size;
+	u_int16_t eth_type,IP_size,IP_position,IP_time;
 
 	printf("Direccion ETH destino= ");	
 	extract_bytes(paquete, 0, ETH_ALEN, eth_dst);
@@ -116,7 +115,7 @@ u_int8_t analizarPaquete(u_int8_t* paquete,struct pcap_pkthdr* cabecera,u_int64_
 	paquete += ETH_ALEN;
 
 	printf("Tipo ETH = ");
-	extract(paquete, 0, 16, 1, &eth_type);
+	extract_bytes(paquete, 0, 2, (void *)&eth_type);
 	eth_type= ntohs(eth_type);
 	printf("0x%04X",eth_type);
 
@@ -132,15 +131,30 @@ u_int8_t analizarPaquete(u_int8_t* paquete,struct pcap_pkthdr* cabecera,u_int64_
 
 	//IP: version IP, longitud de cabecera, longitud total, posicion, tiempo de vida, protocolo, y ambas direcciones IP
 	printf("\n");
-	
 	extract(paquete, 0, 4, 1, &IP_version);
 	printf("Versión IP: %d\n", IP_version);
 
-	paquete += 2;
-	extract(paquete, 0, 16, 1, &ip_size);
+	/*En el wireshark aparece el tamaño de cabecera justo después de la versión IP, por lo que supuse que el campo IHL sería eso pero no coincide..
+	extract(paquete, 4, 4, 1, &IP_header);
+	printf("Tamaño de la cabecera: %d\n", IP_header);
+	paquete += 2;*/
+
+	extract_bytes(paquete, 0,2, (void *)&IP_size);
 	printf("\n");
-	printf("Longitud total: %" PRIu16 "\n",ip_size);
+	IP_size=ntohs(IP_size);
+	printf("Longitud total: %" PRIu16 "\n",IP_size);
 	
+	paquete += 4;
+
+	//No coincide con el wireshark. debería ser 0.
+	extract(paquete, 4, 12, 2, (void *)&IP_position);
+	IP_position = ntohs(IP_position);
+	printf("Posicion IP: %"PRIu16"\n", IP_position);
+
+	paquete+=2;
+	extract_bytes(paquete, 0, 1, (void* )&IP_time);
+	IP_time = ntohs(IP_time);
+	printf("Tiempo de vida: %"PRIu16"\n", IP_time);
 
 
 	printf("\n\n");
