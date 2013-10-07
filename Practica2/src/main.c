@@ -99,7 +99,7 @@ int main(int argc, char **argv)
     return retval;
 }
 
-static const char *proto_informer(const uint32_t* values)
+static const char* proto_informer(const uint32_t* values)
 {
     switch (values[0])
     {
@@ -110,6 +110,38 @@ static const char *proto_informer(const uint32_t* values)
 	    default:
 	        return "Unknown";
     }
+}
+
+#define CHECKFOR(what) if(what != -1 && p_##what == what) return 1;
+
+short filter(const u_int8_t* packet, int eth_type, int protocol, int ip_dst, int ip_src, int port_dst, int port_src)
+{
+	uint32_t p_eth_type, p_protocol, p_ip_dst, p_ip_src, p_port_dst, p_port_src;
+	uint32_t ip_header_size;
+
+	extract(packet, ETH_ALEN * 2, 16, 1, &p_eth_type);
+
+	packet += ETH_ALEN * 2 + ETH_TLEN; // ETH header end.
+
+	extract(packet, 9, 1, 8, &p_protocol);
+	extract(packet, 12, 1, 32, &p_ip_src);
+	extract(packet, 16, 1, 32, &p_ip_dst);
+
+	extract_offset(packet, 0, 4, 1, 4, &ip_header_size);
+
+	packet += ip_header_size * 4; // IP header end.
+
+	extract(packet, 0, 1, 16, &p_port_src);
+	extract(packet, 2, 1, 16, &p_port_dst);
+
+	CHECKFOR(eth_type);
+	CHECKFOR(protocol);
+	CHECKFOR(ip_src);
+	CHECKFOR(ip_dst);
+	CHECKFOR(port_src);
+	CHECKFOR(port_dst);
+
+	return 0;
 }
 
 u_int8_t analizarPaquete(u_int8_t *paquete, struct pcap_pkthdr *cabecera, u_int64_t cont)
