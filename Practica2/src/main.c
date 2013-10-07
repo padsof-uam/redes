@@ -99,9 +99,9 @@ int main(int argc, char **argv)
     return retval;
 }
 
-static const char *proto_informer(const struct packet_val *value)
+static const char *proto_informer(const uint32_t* values)
 {
-    switch (value->v.uint8[0])
+    switch (values[0])
     {
 	    case TCP:
 	        return "TCP";
@@ -114,14 +114,16 @@ static const char *proto_informer(const struct packet_val *value)
 
 u_int8_t analizarPaquete(u_int8_t *paquete, struct pcap_pkthdr *cabecera, u_int64_t cont)
 {
-    int eth_type;
-    int ip_header_size;
-    int protocol;
+    uint32_t eth_type;
+    uint32_t ip_header_size;
+    uint32_t protocol;
 
     print_packet_field(paquete, "MAC destino", 0, 0, 8, ETH_ALEN, HEX);
     print_packet_field(paquete, "MAC origen", ETH_ALEN, 0, 8, ETH_ALEN, HEX);
-    eth_type = print_packet_field(paquete, "Tipo ETH", ETH_ALEN * 2, 0, 16, 1, HEX);
+    print_packet_field(paquete, "Tipo ETH", ETH_ALEN * 2, 0, 16, 1, HEX);
     
+    extract(paquete, ETH_ALEN * 2, 1, 16, &eth_type);
+
     if (eth_type != 2048)
     {
         printf("El tipo ethernet no es válido\n\n");
@@ -132,13 +134,16 @@ u_int8_t analizarPaquete(u_int8_t *paquete, struct pcap_pkthdr *cabecera, u_int6
     paquete += ETH_ALEN * 2 + ETH_TLEN;
     //IP: version IP, longitud de cabecera, longitud total, posicion, tiempo de vida, protocolo, y ambas direcciones IP
     print_packet_field(paquete, "Versión IP", 0, 0, 4, 1, DEC);
-    ip_header_size = print_packet_field(paquete, "Long. header", 0, 4, 4, 1, DEC);
+    print_packet_field(paquete, "Long. header", 0, 4, 4, 1, DEC);
     print_packet_field(paquete, "Longitud", 2, 0, 16, 1, DEC);
     print_packet_field(paquete, "Posición", 6, 3, 13, 1, DEC);
     print_packet_field(paquete, "TTL\t", 8, 0, 8, 1, DEC);
-    protocol = print_packet_field_i(paquete, "Protocolo", 9, 0, 8, 1, DEC, proto_informer);
+    print_packet_field_i(paquete, "Protocolo", 9, 0, 8, 1, DEC, proto_informer);
     print_packet_field(paquete, "IP origen", 12, 0, 8, 4, DEC);
     print_packet_field(paquete, "IP destino", 16, 0, 8, 4, DEC);
+
+    extract(paquete, 9, 1, 8, &protocol);
+    extract_offset(paquete, 0, 4, 1, 4, &ip_header_size);
 
     if(protocol != TCP && protocol != UDP)
     {

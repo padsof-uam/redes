@@ -16,6 +16,8 @@
 #define ERR_UNSUPPORTED_FORMAT -11
 #define FIELD_END -1
 
+#define TOBYTESIZE(bit) ((bit) / 8 ? (bit) / 8 : 1)
+
 typedef enum {
 	HEX, DEC
 } format_type;
@@ -23,6 +25,7 @@ typedef enum {
 struct packet_val
 {
 	short size;
+	short num_values;
 	union 
 	{
 		uint8_t uint8[MAX_VAL_LEN];
@@ -31,11 +34,11 @@ struct packet_val
 	} v;
 };
 
-typedef const char* (*informer)(const struct packet_val* val);
+typedef const char* (*informer)(const uint32_t* value);
 
-int extract_bytes(const uint8_t* packet, int start, int num, uint8_t* dest);
-int extract(const uint8_t* packet, int bit_start, int num, struct packet_val* value);
-int printf_val(const struct packet_val* value, int len, format_type type);
+int extract(const uint8_t* packet, int byte_start, int num, int bit_block_size, u_int32_t* array);
+int extract_offset(const uint8_t* packet, int byte_start, int bit_offset, int num, int bit_block_size, uint32_t* array);
+int printf_val(const u_int32_t* values, int length, format_type type, int byte_size);
 int print_packet_field(const uint8_t* packet, const char* title, int byte_start, int bit_offset, int bit_block_size, int length, format_type format);
 int print_packet_field_i(const uint8_t* packet, const char* title, int byte_start, int bit_offset, int bit_block_size, int length, format_type format, informer f_inf);
 #endif

@@ -1,7 +1,8 @@
 #include "packet_extractor.h"
 #include <stdarg.h>
 
-int extract(const uint8_t *packet, int bit_start, int num, struct packet_val *value)
+
+static int _extract(const uint8_t *packet, int bit_start, struct packet_val *value)
 {
     int bytes_per_value;
     uint8_t uint8val;
@@ -9,18 +10,10 @@ int extract(const uint8_t *packet, int bit_start, int num, struct packet_val *va
     int size_shift, position_shift;
     int i, byte_start;
 
-    if (bit_block_size < 8)
-    {
-        size_shift = 8 - bit_block_size;
-        bytes_per_value = 1;
-    }
-    else
-    {
-        size_shift = 0;
-        bytes_per_value = bit_block_size / 8;
-    }
+    bytes_per_value = TOBYTESIZE(bit_block_size);
+    size_shift = bit_block_size < 8 ? 8 - bit_block_size : 0;
 
-    for (i = 0; i < num; i++)
+    for (i = 0; i < value->num_values; i++)
     {
         byte_start = bit_start / 8;
         position_shift = bit_start - byte_start * 8;
@@ -53,85 +46,29 @@ int extract(const uint8_t *packet, int bit_start, int num, struct packet_val *va
     return 0;
 }
 
-static void _printf8(const uint8_t *array, const char *format, int length, const char *separator)
-{
-    int i;
-    printf(format, array[0]);
-
-    for (i = 1; i < length; i++)
-    {
-        printf("%s", separator);
-        printf(format, array[i]);
-    }
-}
-
-static void _printf16(const uint16_t *array, const char *format, int length, const char *separator)
-{
-    int i;
-    printf(format, array[0]);
-
-    for (i = 1; i < length; i++)
-    {
-        printf("%s", separator);
-        printf(format, array[i]);
-    }
-}
-
-static void _printf32(const uint32_t *array, const char *format, int length, const char *separator)
-{
-    int i;
-    printf(format, array[0]);
-
-    for (i = 1; i < length; i++)
-    {
-        printf("%s", separator);
-        printf(format, array[i]);
-    }
-}
-
-static void _printf(const struct packet_val *value, const char *format, int length, const char *separator)
-{
-    if (value->size <= 8)
-        _printf8(value->v.uint8, format, length, separator);
-    else if (value->size == 16)
-        _printf16(value->v.uint16, format, length, separator);
-    if (value->size == 32)
-        _printf32(value->v.uint32, format, length, separator);
-}
-
-int printf_val(const struct packet_val *value, int len, format_type type)
+int printf_val(const u_int32_t* values, int length, format_type type, int byte_size)
 {
     const char *format;
     const char* separator;
-    int size = value->size / 8;
+    int i;
     char format_str[256];
-
-    if (size == 0)
-        size = 1;
 
     if (type == DEC)
     {
     	separator = ".";
 
-        if (value->size <= 8)
-            format = PRIu8;
-        else if (value->size == 16)
-            format = PRIu16;
-        else if (value->size == 32)
-            format = PRIu32;
-        else
-            return ERR_UNSUPPORTED_SIZE;
+    	format = PRIu32;
     }
     else if (type == HEX)
     {
     	separator = ":";
 
-        if (value->size <= 8)
+        if (byte_size == 1)
             format = "02X";
-        else if (value->size == 16)
+        else if (byte_size == 2)
             format = "04X";
-        else if (value->size == 32)
-            format = PRIX32;
+        else if (byte_size == 4)
+            format = "08X";
         else
             return ERR_UNSUPPORTED_SIZE;
     }
@@ -142,12 +79,32 @@ int printf_val(const struct packet_val *value, int len, format_type type)
 
     sprintf(format_str, "%%%s", format);
 
-    if(type == HEX && len == 1)
+    if(type == HEX && length == 1)
     	printf("0x");
 
-    _printf(value, format_str, len, separator);
+    printf(format_str, values[0]);
+
+    for (i = 1; i < length; i++)
+    {
+        printf("%s", separator);
+        printf(format_str, values[i]);
+    }
 
     return 0;
+}
+
+static int packet_val_toint(const struct packet_val* value, uint32_t* array)
+{
+	int i, datasize;	
+
+	datasize = TOBYTESIZE(value->size);
+
+	memset(array, 0, sizeof(uint32_t) * (value->num_values));
+
+	for(i = 0; i < value->num_values; i++)
+		memcpy(array + i, value->v.uint8 + datasize * i, datasize); // Podemos usar value->v.uint8 porque v es union y todos los punteros están en la misma posición.
+
+	return 0;
 }
 
 int print_packet_field(const uint8_t* packet, const char* title, int byte_start, int bit_offset, int bit_block_size, int length, format_type format)
@@ -157,33 +114,43 @@ int print_packet_field(const uint8_t* packet, const char* title, int byte_start,
 
 int print_packet_field_i(const uint8_t* packet, const char* title, int byte_start, int bit_offset, int bit_block_size, int length, format_type format, informer f_inf)
 {
-    struct packet_val value;
+    uint32_t values[length];
+
     int retval;
-    int datasize;
-    value.size = bit_block_size;
 
-    retval = extract(packet, byte_start * 8 + bit_offset, length, &value);
+    retval = extract_offset(packet, byte_start, bit_offset, length, bit_block_size, values);
 
-    if (retval != 0)
-        return retval;
+    if(retval != 0)
+    	return retval;
 
     printf("%s:\t", title);
 
-    printf_val(&value, length, format);
+    retval = printf_val(values, length, format, TOBYTESIZE(bit_block_size));
+
+    if(retval != 0)
+    	return retval;
 
     if(f_inf != NULL)
-    	printf(" (%s)", f_inf(&value));
+    	printf(" (%s)", f_inf(values));
 
     printf("\n");
 
-    datasize = (bit_block_size * length) / 8;
-
-    if(datasize > 4)
-    	datasize = 4;
-    else if (datasize == 0)
-    	datasize = 1;
-
-    memcpy(&retval, value.v.uint8, datasize); // ¿Habrá que hacer un shift?
-
-    return retval;
+    return 0;
 }
+
+int extract(const uint8_t* packet, int byte_start, int num, int bit_block_size, u_int32_t* array)
+{
+	return extract_offset(packet, byte_start, 0, num, bit_block_size, array);
+}
+
+int extract_offset(const uint8_t* packet, int byte_start, int bit_offset, int length, int bit_block_size, u_int32_t* array)
+{
+	struct packet_val value;
+	value.num_values = length;
+	value.size = bit_block_size;
+
+	_extract(packet, byte_start*8 + bit_offset, &value);
+
+	return packet_val_toint(&value, array);
+}
+
