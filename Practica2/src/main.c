@@ -112,9 +112,9 @@ static const char* proto_informer(const uint32_t* values)
     }
 }
 
-#define CHECKFOR(what) if(what != -1 && p_##what == what) return 1;
+#define CHECKFOR(what) if(what != -1 && p_##what != what) return 1;
 
-short filter(const u_int8_t* packet, int eth_type, int protocol, int ip_dst, int ip_src, int port_dst, int port_src)
+short filter(const u_int8_t* packet, int eth_type, int ip_dst, int ip_src, int port_dst, int port_src)
 {
 	uint32_t p_eth_type, p_protocol, p_ip_dst, p_ip_src, p_port_dst, p_port_src;
 	uint32_t ip_header_size;
@@ -123,19 +123,22 @@ short filter(const u_int8_t* packet, int eth_type, int protocol, int ip_dst, int
 
 	packet += ETH_ALEN * 2 + ETH_TLEN; // ETH header end.
 
-	extract(packet, 9, 1, 8, &p_protocol);
-	extract(packet, 12, 1, 32, &p_ip_src);
-	extract(packet, 16, 1, 32, &p_ip_dst);
-
 	extract_offset(packet, 0, 4, 1, 4, &ip_header_size);
+
+    extract(packet, 9, 1, 8, &p_protocol);
+    extract(packet, 12, 1, 32, &p_ip_src);
+    extract(packet, 16, 1, 32, &p_ip_dst);
+
 
 	packet += ip_header_size * 4; // IP header end.
 
 	extract(packet, 0, 1, 16, &p_port_src);
 	extract(packet, 2, 1, 16, &p_port_dst);
 
-	CHECKFOR(eth_type);
-	CHECKFOR(protocol);
+    if(p_protocol != UDP && p_protocol != TCP)
+        return 1;
+
+    CHECKFOR(eth_type);
 	CHECKFOR(ip_src);
 	CHECKFOR(ip_dst);
 	CHECKFOR(port_src);
