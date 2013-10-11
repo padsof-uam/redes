@@ -27,7 +27,7 @@ gcc -o practica2 practica2.c -lpcap
 #define ETH_DATA_MAX  (ETH_FRAME_MAX - ETH_HLEN)
 #define ETH_DATA_MIN  (ETH_FRAME_MIN - ETH_HLEN)
 #define OK 0
-#define ERROR 1
+#define ERROR -1
 
 #define IP(a,b,c,d) (a << 3 + b << 2 + c << 1 + d)
 
@@ -60,7 +60,7 @@ int main(int argc, char **argv)
     u_int8_t *paquete;
     struct pcap_pkthdr *cabecera;
     u_int8_t retorno;
-    int capture_retval;
+    int capture_retval,cont_filtered_packets=0;
     int retval = OK;
     args filter_values;
 
@@ -94,11 +94,12 @@ int main(int argc, char **argv)
     {
         cont++;
 
-        if ((retorno = analizarPaquete(paquete, cabecera, cont)) != OK)
+        if ((retorno = analizarPaquete(paquete, cabecera, cont)) == ERROR)
         {
             printf("Error al analizar el paquete %" PRIu64 "; %s %d.\n", cont, __FILE__, __LINE__);
             exit(retorno);
         }
+        cont_filtered_packets += retorno;
     }
 
     if (capture_retval == -1)
@@ -111,6 +112,7 @@ int main(int argc, char **argv)
     else // PCAP_ERROR_BREAK es la otra salida posible, hemos llegado a final de archivo.
     {
         printf("No hay mas paquetes.\n Capturados %" PRIu64 " paquetes.\n\n", cont);
+        printf("Paquetes después del filtro: %d\n", cont_filtered_packets);
     }
 
     pcap_close(descr);
@@ -137,14 +139,14 @@ short arg_parser(int argc, char **argv,args*filter_values){
 
 
 }
-short filter(const u_int8_t* packet, uint32_t eth_type, uint32_t ip_dst, uint32_t ip_src, uint32_t port_dst, uint32_t port_src)
+short filter(u_int8_t* packet, uint32_t eth_type, uint32_t ip_dst, uint32_t ip_src, uint32_t port_dst, uint32_t port_src)
 {
 	uint32_t p_eth_type, p_protocol, p_ip_dst, p_ip_src, p_port_dst, p_port_src;
 	uint32_t ip_header_size;
 
-	extract(packet, ETH_ALEN * 2, 16, 1, &p_eth_type);
+	extract(packet, ETH_ALEN * 2, 1, 16, &p_eth_type);
 
-	packet += ETH_ALEN * 2 + ETH_TLEN; // ETH header end.
+	packet += ETH_ALEN*2 + ETH_TLEN; // ETH header end.
 
 	extract_offset(packet, 0, 4, 1, 4, &ip_header_size);
 
@@ -178,20 +180,14 @@ u_int8_t analizarPaquete(u_int8_t *paquete, struct pcap_pkthdr *cabecera, u_int6
 
     uint32_t ip_src = ip_fromstr("192.168.126.1");
     uint32_t ip_dst = ip_fromstr("192.168.126.255");
-    filter(paquete, 2048, ip_src,ip_dst, 17500, 17500);
+   if (filter(paquete, 2048, ip_dst,ip_src, 17500, 17500)) {
+        return 0;
+    }
 
     print_packet_field(paquete, "MAC destino", 0, 0, 8, ETH_ALEN, HEX);
     print_packet_field(paquete, "MAC origen", ETH_ALEN, 0, 8, ETH_ALEN, HEX);
     print_packet_field(paquete, "Tipo ETH", ETH_ALEN * 2, 0, 16, 1, HEX);
     
-    extract(paquete, ETH_ALEN * 2, 1, 16, &eth_type);
-
-    if (eth_type != 2048)
-    {
-        printf("El tipo ethernet no es válido\n\n");
-        return OK;
-    }
-
     //Fin encapsulamiento Ethernet
     paquete += ETH_ALEN * 2 + ETH_TLEN;
     //IP: version IP, longitud de cabecera, longitud total, posicion, tiempo de vida, protocolo, y ambas direcciones IP
@@ -207,12 +203,6 @@ u_int8_t analizarPaquete(u_int8_t *paquete, struct pcap_pkthdr *cabecera, u_int6
     extract(paquete, 9, 1, 8, &protocol);
     extract_offset(paquete, 0, 4, 1, 4, &ip_header_size);
 
-    if(protocol != TCP && protocol != UDP)
-    {
-    	printf("Protocolo inválido.\n");
-    	return OK;
-    }
-
     paquete += ip_header_size * 4;
 
     print_packet_field(paquete, "Puerto origen", 0, 0, 16, 1, DEC);
@@ -225,5 +215,5 @@ u_int8_t analizarPaquete(u_int8_t *paquete, struct pcap_pkthdr *cabecera, u_int6
 
     printf("\n");
 
-    return OK;
+    return 1;
 }
