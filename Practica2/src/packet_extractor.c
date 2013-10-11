@@ -9,15 +9,14 @@ uint32_t ip_fromstr(const char* ipstr)
     int i;
     uint32_t val = 0;
 
-
     for(i = 3; i >= 0; i--)
     {
+        val += strtol(token, NULL, 10) << (8 * i);
+
         token = strsep(&dup, ".");
 
         if(token == NULL)
-            return -1;
-
-        val += strtol(token, NULL, 10) << (8 * i);
+            return -1;        
     }
 
     return val;
