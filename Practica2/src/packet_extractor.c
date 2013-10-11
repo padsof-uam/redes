@@ -2,23 +2,26 @@
 #include <stdarg.h>
 
 
-int ip_fromstr(const char* ipstr, uint8_t ipnum[static 4])
+uint32_t ip_fromstr(const char* ipstr)
 {
     char* dup = strdup(ipstr);
     char* token;
     int i;
+    uint32_t val = 0;
 
-    for(i = 0; i < 4; i++)
+
+    for(i = 3; i >= 0; i--)
     {
         token = strsep(&dup, ".");
 
         if(token == NULL)
             return -1;
 
-        ipnum[i] = strtol(token, NULL, 10);
+        val += strtol(token, NULL, 10) << (8 * i);
     }
 
-    return 0;
+    free(dup);
+    return val;
 }
 
 static int _extract(const uint8_t *packet, int bit_start, struct packet_val *value)

@@ -64,6 +64,10 @@ int main(int argc, char **argv)
     int retval = OK;
     args filter_values;
 
+    uint32_t a =ip_fromstr("192.168.126.128");
+
+    printf("%d\n", a);
+
     if (arg_parser(argc, argv,&filter_values) == 1)
         printf("Error en los argumentos introducidos\n");
 
@@ -133,7 +137,7 @@ short arg_parser(int argc, char **argv,args*filter_values){
 
 
 }
-short filter(const u_int8_t* packet, int eth_type, int ip_dst, int ip_src, int port_dst, int port_src)
+short filter(const u_int8_t* packet, uint32_t eth_type, uint32_t ip_dst, uint32_t ip_src, uint32_t port_dst, uint32_t port_src)
 {
 	uint32_t p_eth_type, p_protocol, p_ip_dst, p_ip_src, p_port_dst, p_port_src;
 	uint32_t ip_header_size;
@@ -172,7 +176,9 @@ u_int8_t analizarPaquete(u_int8_t *paquete, struct pcap_pkthdr *cabecera, u_int6
     uint32_t ip_header_size;
     uint32_t protocol;
 
-    filter(paquete, 2048, ip_fromstr("192.168.126.1"),ip_fromstr("192.168.126.255"), 17500, 17500);
+    uint32_t ip_src = ip_fromstr("192.168.126.1");
+    uint32_t ip_dst = ip_fromstr("192.168.126.255");
+    filter(paquete, 2048, ip_src,ip_dst, 17500, 17500);
 
     print_packet_field(paquete, "MAC destino", 0, 0, 8, ETH_ALEN, HEX);
     print_packet_field(paquete, "MAC origen", ETH_ALEN, 0, 8, ETH_ALEN, HEX);

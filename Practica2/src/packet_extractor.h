@@ -39,10 +39,9 @@ typedef const char* (*informer)(const uint32_t* value);
 /**
  * Converts an IP (X.X.X.X) to its numeric representation in four bytes.
  * @param  ipstr String
- * @param  ipnum Array where the numbers will be stored.
- * @return       0 if OK, -1 if error.
+ * @return       Numeric representation.
  */
-int ip_fromstr(const char* ipstr, uint8_t ipnum[static 4]);
+uint32_t ip_fromstr(const char* ipstr);
 
 /**
  * Extracts one or more numbers from a packet.
