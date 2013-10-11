@@ -37,6 +37,14 @@ struct packet_val
 typedef const char* (*informer)(const uint32_t* value);
 
 /**
+ * Converts an IP (X.X.X.X) to its numeric representation in four bytes.
+ * @param  ipstr String
+ * @param  ipnum Array where the numbers will be stored.
+ * @return       0 if OK, -1 if error.
+ */
+int ip_fromstr(const char* ipstr, uint8_t ipnum[static 4]);
+
+/**
  * Extracts one or more numbers from a packet.
  * @param  packet         Packet, given as an array of 1 byte values.
  * @param  byte_start     Byte offset where the value starts.
