@@ -5,20 +5,21 @@
 uint32_t ip_fromstr(const char* ipstr)
 {
     char* dup = strdup(ipstr);
-    char* token;
     char* tofree = dup;
+    char* token;
     int i;
     uint32_t val = 0;
 
 
-    for(i = 3; i >= 0; i--){
 
+    for(i = 3; i > 0; i--)
+    {
         token = strsep(&dup, ".");
 
         if(token == NULL)
             return -1;
 
-        val += atoi(token) << (8*i);
+          val += atoi(token) << (8*i);
         
     }
 
