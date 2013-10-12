@@ -16,6 +16,12 @@
 #define ERR_UNSUPPORTED_FORMAT -11
 #define FIELD_END -1
 
+/* Tamano maximo y minimo de los datos de una trama ethernet             */
+#define ETH_DATA_MAX  (ETH_FRAME_MAX - ETH_HLEN)
+#define ETH_DATA_MIN  (ETH_FRAME_MIN - ETH_HLEN)
+#define OK 0
+#define ERROR -1
+
 #define TOBYTESIZE(bit) ((bit) / 8 ? (bit) / 8 : 1)
 
 typedef enum {

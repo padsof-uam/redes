@@ -2,30 +2,6 @@
 #include <stdarg.h>
 
 
-uint32_t ip_fromstr(const char* ipstr)
-{
-    char* dup = strdup(ipstr);
-    char* tofree = dup;
-    char* token;
-    int i;
-    uint32_t val = 0;
-
-
-
-    for(i = 3; i > 0; i--)
-    {
-        token = strsep(&dup, ".");
-
-        if(token == NULL)
-            return -1;
-
-          val += atoi(token) << (8*i);
-        
-    }
-
-    free(tofree);
-    return val;
-}
 
 static int _extract(const uint8_t *packet, int bit_start, struct packet_val *value)
 {
