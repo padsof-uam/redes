@@ -27,10 +27,10 @@
 
 typedef struct 
 {
-    u_int32_t ip_src;
-    u_int32_t ip_dst;
-    u_int32_t port_src;
-    u_int32_t port_dst; 
+    int ip_src;
+    int ip_dst;
+    int port_src;
+    int port_dst; 
 } args;
 
 int analizarPaquete(u_int8_t *paquete, struct pcap_pkthdr *cabecera, args* filter_values);

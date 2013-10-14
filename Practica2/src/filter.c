@@ -6,12 +6,17 @@
 short arg_parser(const int argc, const char **argv, args *filter_values)
 {
     short ipo = 0, ipd = 0, po = 0, pd = 0;
+    short retval = OK;
+    int i = 2;
 
-    if (argc % 2 != 0 || argc > 10 )
-        return ERROR;
+    if(argc == 1 || (argc >= 2 && argv[1][0] == '-'))
+    {
+        i = 1;
+        retval = NO_FILE;
+    }
 
     // Habría que comprobar más o damos por supuesto que van a ir bien
-    for (int i = 2; i < argc; i += 2)
+    for (; i < argc; i += 2)
     {
         if (ipo == 0 && !strcmp(argv[i], "-ipo"))
         {
@@ -44,7 +49,7 @@ short arg_parser(const int argc, const char **argv, args *filter_values)
     if (pd == 0)
         filter_values->port_dst = -1;
 
-    return OK;
+    return retval;
 }
 
 short filter(u_int8_t *packet, uint32_t eth_type, args *filter_values)

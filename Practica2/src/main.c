@@ -32,10 +32,11 @@ int main(const int argc, const char **argv)
     int capture_retval,cont_filtered_packets=0;
     int retval = OK;
     args filter_values;
+    const char* file;
 
-    short aux = arg_parser(argc, argv,&filter_values);
+    short parser_retval = arg_parser(argc, argv,&filter_values);
 
-    if (aux == ERROR){
+    if (parser_retval == ERROR){
         printf("Error en los argumentos introducidos\n");
         return ERROR;        
     }
@@ -47,11 +48,20 @@ int main(const int argc, const char **argv)
         exit(ERROR);
     }
 
+    if(parser_retval == NO_FILE)
+    {
+        descr = pcap_open_live("eth0", 100, 0, 0, errbuf);
+        file = "eth0";
+    }
+    else
+    {
+        descr = pcap_open_offline(argv[1], errbuf);
+        file = argv[1];
+    }
 
-    descr = pcap_open_offline(argv[1], errbuf);
     if (descr == NULL)
     {
-        printf("Error: pcap_open_offline(): File: %s, %s %s %d.\n", argv[1], errbuf, __FILE__, __LINE__);
+        printf("Error: pcap_open: File: %s, %s %s %d.\n", file, errbuf, __FILE__, __LINE__);
         exit(ERROR);
     }
 
@@ -64,6 +74,7 @@ int main(const int argc, const char **argv)
             printf("Error al analizar el paquete %" PRIu64 "; %s %d.\n", cont, __FILE__, __LINE__);
             exit(retorno);
         }
+
         cont_filtered_packets += retorno;
     }
 
