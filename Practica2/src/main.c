@@ -35,6 +35,8 @@ int main(const int argc, const char **argv)
     args filter_values;
     double filter_percentage;
     const char* file;
+    int timestart, timeend;
+    double packs_per_sec;
 
     short parser_retval = arg_parser(argc, argv,&filter_values);
 
@@ -69,6 +71,7 @@ int main(const int argc, const char **argv)
 
     printf("Leyendo paquetes en %s...\n", file);
 
+    timestart = time(NULL);
     while (ctrl_pressed == 0 && (capture_retval = pcap_next_ex(descr, &cabecera, (const u_char **) (&paquete))) == 1)
     {
         cont++;
@@ -81,6 +84,7 @@ int main(const int argc, const char **argv)
 
         cont_filtered_packets += retorno;
     }
+    timeend = time(NULL);
 
     if (capture_retval == -1)
     {
@@ -92,9 +96,11 @@ int main(const int argc, const char **argv)
     else // PCAP_ERROR_BREAK es la otra salida posible, hemos llegado a final de archivo.
     {
         filter_percentage = 100 * (double) cont_filtered_packets / cont;
+        packs_per_sec = (double) cont / (timeend - timestart);
         printf("No hay mas paquetes.\n");
-        printf("Estadísticas:\n\tCapturados: %" PRIu64 "\n\tDescartados: %"PRIu64" (%.2lf %%)\n\tAceptados: %d (%.2lf %%)\n",
-                cont,
+        printf("Estadísticas:\n\tDuración: %d segundos\n\tCapturados: %" PRIu64 " (%.2lf paquetes/s)\n\tDescartados: %"PRIu64" (%.2lf %%)\n\tAceptados: %d (%.2lf %%)\n",
+                timeend - timestart,
+                cont, packs_per_sec,
                 cont - cont_filtered_packets, 100 - filter_percentage,
                 cont_filtered_packets, filter_percentage
                 );
