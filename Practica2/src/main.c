@@ -11,14 +11,15 @@
 
 void handleSignal(int nsignal);
 
+volatile sig_atomic_t ctrl_pressed = 0;
+
 pcap_t *descr;
 u_int64_t cont = 0;
 
 void handleSignal(int nsignal)
 {
-    printf("Control-C pulsado (%" PRIu64 ")\n", cont);
-    pcap_close(descr);
-    exit(OK);
+    printf("Control-C pulsado\n");
+    ctrl_pressed = 1;
 }
 
 
@@ -32,6 +33,7 @@ int main(const int argc, const char **argv)
     int capture_retval,cont_filtered_packets=0;
     int retval = OK;
     args filter_values;
+    double filter_percentage;
     const char* file;
 
     short parser_retval = arg_parser(argc, argv,&filter_values);
@@ -65,7 +67,9 @@ int main(const int argc, const char **argv)
         exit(ERROR);
     }
 
-    while ((capture_retval = pcap_next_ex(descr, &cabecera, (const u_char **) (&paquete))) == 1)
+    printf("Leyendo paquetes en %s...\n", file);
+
+    while (ctrl_pressed == 0 && (capture_retval = pcap_next_ex(descr, &cabecera, (const u_char **) (&paquete))) == 1)
     {
         cont++;
 
@@ -87,8 +91,13 @@ int main(const int argc, const char **argv)
     }
     else // PCAP_ERROR_BREAK es la otra salida posible, hemos llegado a final de archivo.
     {
-        printf("No hay mas paquetes.\n Capturados %" PRIu64 " paquetes.\n\n", cont);
-        printf("Paquetes después del filtro: %d\n", cont_filtered_packets);
+        filter_percentage = 100 * (double) cont_filtered_packets / cont;
+        printf("No hay mas paquetes.\n");
+        printf("Estadísticas:\n\tCapturados: %" PRIu64 "\n\tDescartados: %"PRIu64" (%.2lf %%)\n\tAceptados: %d (%.2lf %%)\n",
+                cont,
+                cont - cont_filtered_packets, 100 - filter_percentage,
+                cont_filtered_packets, filter_percentage
+                );
     }
 
     pcap_close(descr);

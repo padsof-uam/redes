@@ -1,8 +1,6 @@
 #include "filter.h"
 #include "packet_extractor.h"
 
-
-
 short arg_parser(const int argc, const char **argv, args *filter_values)
 {
     short ipo = 0, ipd = 0, po = 0, pd = 0;
