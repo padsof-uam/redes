@@ -28,7 +28,7 @@ int main(const int argc, const char **argv)
     char errbuf[PCAP_ERRBUF_SIZE];
     u_int8_t *paquete;
     struct pcap_pkthdr *cabecera;
-    u_int8_t retorno;
+    int retorno;
     int capture_retval,cont_filtered_packets=0;
     int retval = OK;
     args filter_values;

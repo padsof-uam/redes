@@ -3,133 +3,138 @@
 
 
 
-short arg_parser(const int argc,const char **argv,args*filter_values){
+short arg_parser(const int argc, const char **argv, args *filter_values)
+{
+    short ipo = 0, ipd = 0, po = 0, pd = 0;
 
-    short ipo = 0,ipd = 0,po = 0,pd = 0;
-    
     if (argc % 2 != 0 || argc > 10 )
         return ERROR;
-    
-    //Habría que comprobar más o damos por supuesto que van a ir bien
-    
-    for (int i = 2; i < argc; i+=2){
 
-        if (ipo == 0 && !strcmp(argv[i],"-ipo")){
-            filter_values->ip_src = ip_fromstr(argv[i+1]);
+    // Habría que comprobar más o damos por supuesto que van a ir bien
+    for (int i = 2; i < argc; i += 2)
+    {
+        if (ipo == 0 && !strcmp(argv[i], "-ipo"))
+        {
+            filter_values->ip_src = ip_fromstr(argv[i + 1]);
             ipo = 1;
         }
-        if (ipd == 0 && !strcmp(argv[i],"-ipd")){
-            filter_values->ip_dst = ip_fromstr(argv[i+1]);
-            ipd = 1; 	
+        if (ipd == 0 && !strcmp(argv[i], "-ipd"))
+        {
+            filter_values->ip_dst = ip_fromstr(argv[i + 1]);
+            ipd = 1;
         }
-        if(po == 0 && !strcmp(argv[i], "-po")){
-            filter_values->port_src = atoi(argv[i+1]);
+        if (po == 0 && !strcmp(argv[i], "-po"))
+        {
+            filter_values->port_src = atoi(argv[i + 1]);
             po = 1;
         }
-        if (pd == 0 && !strcmp(argv[i], "-pd")){
-            filter_values->port_dst = atoi(argv[i+1]);
+        if (pd == 0 && !strcmp(argv[i], "-pd"))
+        {
+            filter_values->port_dst = atoi(argv[i + 1]);
             pd = 1;
         }
-            
     }
 
     if (ipo == 0)
-    	 filter_values->ip_src = -1;
+        filter_values->ip_src = -1;
     if (ipd == 0)
-    	 filter_values->ip_dst = -1;
+        filter_values->ip_dst = -1;
     if (po == 0)
-    	 filter_values->port_src = -1;
+        filter_values->port_src = -1;
     if (pd == 0)
-    	 filter_values->port_dst = -1;
+        filter_values->port_dst = -1;
 
     return OK;
 }
 
-short filter(u_int8_t* packet, uint32_t eth_type,args* filter_values){
-	return _filter(packet,eth_type, filter_values->ip_dst,filter_values->ip_src,filter_values->port_dst,filter_values->port_src);
+short filter(u_int8_t *packet, uint32_t eth_type, args *filter_values)
+{
+    return _filter(packet, eth_type, filter_values->ip_dst, filter_values->ip_src, filter_values->port_dst, filter_values->port_src);
 }
 
-short _filter(u_int8_t* packet, uint32_t eth_type, uint32_t ip_dst, uint32_t ip_src, uint32_t port_dst, uint32_t port_src)
+short _filter(u_int8_t *packet, uint32_t eth_type, uint32_t ip_dst, uint32_t ip_src, uint32_t port_dst, uint32_t port_src)
 {
-	uint32_t p_eth_type, p_protocol, p_ip_dst, p_ip_src, p_port_dst, p_port_src;
-	uint32_t ip_header_size;
+    uint32_t p_eth_type, p_protocol, p_ip_dst, p_ip_src, p_port_dst, p_port_src;
+    uint32_t ip_header_size;
 
-	extract(packet, ETH_ALEN * 2, 1, 16, &p_eth_type);
+    extract(packet, ETH_ALEN * 2, 1, 16, &p_eth_type);
 
-	packet += ETH_ALEN*2 + ETH_TLEN; // ETH header end.
+    packet += ETH_ALEN * 2 + ETH_TLEN; // ETH header end.
 
-	extract_offset(packet, 0, 4, 1, 4, &ip_header_size);
+    extract_offset(packet, 0, 4, 1, 4, &ip_header_size);
 
     extract(packet, 9, 1, 8, &p_protocol);
     extract(packet, 12, 1, 32, &p_ip_src);
     extract(packet, 16, 1, 32, &p_ip_dst);
 
 
-	packet += ip_header_size * 4; // IP header end.
+    packet += ip_header_size * 4; // IP header end.
 
-	extract(packet, 0, 1, 16, &p_port_src);
-	extract(packet, 2, 1, 16, &p_port_dst);
+    extract(packet, 0, 1, 16, &p_port_src);
+    extract(packet, 2, 1, 16, &p_port_dst);
 
-    if(p_protocol != UDP && p_protocol != TCP)
+    if (p_protocol != UDP && p_protocol != TCP)
         return 1;
 
     CHECKFOR(eth_type);
-	CHECKFOR(ip_src);
-	CHECKFOR(ip_dst);
-	CHECKFOR(port_src);
-	CHECKFOR(port_dst);
+    CHECKFOR(ip_src);
+    CHECKFOR(ip_dst);
+    CHECKFOR(port_src);
+    CHECKFOR(port_dst);
 
-	return 0;
+    return 0;
 }
 
-uint32_t ip_fromstr(const char* ipstr)
+uint32_t ip_fromstr(const char *ipstr)
 {
-    char* dup = strdup(ipstr);
-    char* tofree = dup;
-    char* token;
+    char *dup = strdup(ipstr);
+    char *tofree = dup;
+    char *token;
     int i;
     uint32_t val = 0;
 
-
-
-
-    for(i = 3; i > 0; i--)
+    for (i = 3; i >= 0; i--)
     {
         token = strsep(&dup, ".");
 
-        if(token == NULL)
+        if (token == NULL)
             return -1;
 
-          val += atoi(token) << (8*i);
-        
+        val += atoi(token) << (8 * i);
     }
-
-    
 
     free(tofree);
     return val;
 }
 
-
-u_int8_t analizarPaquete(u_int8_t *paquete, struct pcap_pkthdr *cabecera, args * filter_values)
+static const char *proto_informer(const uint32_t *values)
 {
-   
+    switch (values[0])
+    {
+        case TCP:
+            return "TCP";
+        case UDP:
+            return "UDP";
+        default:
+            return "Unknown";
+    }
+}
+
+int analizarPaquete(u_int8_t *paquete, struct pcap_pkthdr *cabecera, args *filter_values)
+{
     uint32_t ip_header_size;
     uint32_t protocol;
+    int filtered;
 
-    int aux = 0;
+    filtered = filter(paquete, 2048, filter_values);
 
-    aux= filter(paquete, 2048, filter_values);
-
-    if (aux != 0){
-    	return 0;
-    }
-
+    if (filtered != 0)
+        return 0;
 
     print_packet_field(paquete, "MAC destino", 0, 0, 8, ETH_ALEN, HEX);
     print_packet_field(paquete, "MAC origen", ETH_ALEN, 0, 8, ETH_ALEN, HEX);
     print_packet_field(paquete, "Tipo ETH", ETH_ALEN * 2, 0, 16, 1, HEX);
-    
+
     //Fin encapsulamiento Ethernet
     paquete += ETH_ALEN * 2 + ETH_TLEN;
     //IP: version IP, longitud de cabecera, longitud total, posicion, tiempo de vida, protocolo, y ambas direcciones IP
@@ -150,9 +155,9 @@ u_int8_t analizarPaquete(u_int8_t *paquete, struct pcap_pkthdr *cabecera, args *
     print_packet_field(paquete, "Puerto origen", 0, 0, 16, 1, DEC);
     print_packet_field(paquete, "Puerto destino", 2, 0, 16, 1, DEC);
 
-    if(protocol == UDP)
+    if (protocol == UDP)
     {
-    	print_packet_field(paquete, "Long. UDP", 4, 0, 16, 1, DEC);
+        print_packet_field(paquete, "Long. UDP", 4, 0, 16, 1, DEC);
     }
 
     printf("\n");
@@ -160,18 +165,4 @@ u_int8_t analizarPaquete(u_int8_t *paquete, struct pcap_pkthdr *cabecera, args *
     return 1;
 }
 
-
-
-static const char* proto_informer(const uint32_t* values)
-{
-    switch (values[0])
-    {
-	    case TCP:
-	        return "TCP";
-	    case UDP:
-	        return "UDP";
-	    default:
-	        return "Unknown";
-    }
-}
 

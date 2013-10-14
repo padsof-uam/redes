@@ -20,6 +20,7 @@
 #define UDP 17               /* Protocolo UDP                            */
 #define ETH_FRAME_MAX 1514   /* Tamano maximo trama ethernet (sin CRC)   */
 #define ETH_FRAME_MIN 60     /* Tamano minimo trama ethernet (sin CRC)   */
+#define NO_FILE -20
 
 #define CHECKFOR(what) if(what != -1 && p_##what != what) return 1;
 
@@ -29,16 +30,15 @@ typedef struct
     u_int32_t ip_src;
     u_int32_t ip_dst;
     u_int32_t port_src;
-    u_int32_t port_dst;  
-}args;
+    u_int32_t port_dst; 
+} args;
 
-u_int8_t analizarPaquete(u_int8_t *paquete, struct pcap_pkthdr *cabecera, args * filter_values);
+int analizarPaquete(u_int8_t *paquete, struct pcap_pkthdr *cabecera, args* filter_values);
 
 uint32_t ip_fromstr(const char* ipstr);
 
-static const char* proto_informer(const uint32_t* values);
 
-short arg_parser(const int argc, const char **argv,args * filter_values);
+short arg_parser(const int argc, const char **argv, args *filter_values);
 short filter(u_int8_t* packet, uint32_t eth_type,args* filter_values);
 
 short _filter(u_int8_t* packet, uint32_t eth_type, uint32_t ip_dst, uint32_t ip_src, uint32_t port_dst, uint32_t port_src);
