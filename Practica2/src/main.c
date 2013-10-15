@@ -22,7 +22,8 @@ void handleSignal(int nsignal)
     ctrl_pressed = 1;
 }
 
-
+void print_stats(int total_packets, int accepted, long start, long end);
+long get_ms_time();
 
 int main(const int argc, const char **argv)
 {
@@ -30,19 +31,18 @@ int main(const int argc, const char **argv)
     u_int8_t *paquete;
     struct pcap_pkthdr *cabecera;
     int retorno;
-    int capture_retval,cont_filtered_packets=0;
+    int capture_retval, cont_filtered_packets = 0;
     int retval = OK;
     args filter_values;
-    double filter_percentage;
-    const char* file;
-    int timestart, timeend;
-    double packs_per_sec;
+    const char *file;
+    long timestart, timeend;
 
-    short parser_retval = arg_parser(argc, argv,&filter_values);
+    short parser_retval = arg_parser(argc, argv, &filter_values);
 
-    if (parser_retval == ERROR){
+    if (parser_retval == ERROR)
+    {
         printf("Error en los argumentos introducidos\n");
-        return ERROR;        
+        return ERROR;
     }
 
 
@@ -52,7 +52,7 @@ int main(const int argc, const char **argv)
         exit(ERROR);
     }
 
-    if(parser_retval == NO_FILE)
+    if (parser_retval == NO_FILE)
     {
         descr = pcap_open_live("eth0", 100, 0, 0, errbuf);
         file = "eth0";
@@ -71,9 +71,12 @@ int main(const int argc, const char **argv)
 
     printf("Leyendo paquetes en %s...\n", file);
 
-    timestart = time(NULL);
+    timestart = get_ms_time();
     while (ctrl_pressed == 0 && (capture_retval = pcap_next_ex(descr, &cabecera, (const u_char **) (&paquete))) == 1)
     {
+        if(ctrl_pressed)
+            break;
+
         cont++;
 
         if ((retorno = analizarPaquete(paquete, cabecera, &filter_values)) == ERROR)
@@ -84,7 +87,7 @@ int main(const int argc, const char **argv)
 
         cont_filtered_packets += retorno;
     }
-    timeend = time(NULL);
+    timeend = get_ms_time();
 
     if (capture_retval == -1)
     {
@@ -95,18 +98,33 @@ int main(const int argc, const char **argv)
     }
     else // PCAP_ERROR_BREAK es la otra salida posible, hemos llegado a final de archivo.
     {
-        filter_percentage = 100 * (double) cont_filtered_packets / cont;
-        packs_per_sec = (double) cont / (timeend - timestart);
         printf("No hay mas paquetes.\n");
-        printf("Estadísticas:\n\tDuración: %d segundos\n\tCapturados: %" PRIu64 " (%.2lf paquetes/s)\n\tDescartados: %"PRIu64" (%.2lf %%)\n\tAceptados: %d (%.2lf %%)\n",
-                timeend - timestart,
-                cont, packs_per_sec,
-                cont - cont_filtered_packets, 100 - filter_percentage,
-                cont_filtered_packets, filter_percentage
-                );
+        print_stats(cont, cont_filtered_packets, timestart, timeend);
     }
 
     pcap_close(descr);
 
     return retval;
+}
+
+long get_ms_time()
+{
+    struct timeval tval;
+
+    gettimeofday(&tval, NULL);
+
+    return tval.tv_sec * 1000 + tval.tv_usec / 1000;
+}
+
+void print_stats(int total_packets, int accepted, long start, long end)
+{
+    double filtered_percentage = 100 * (double) accepted / total_packets;
+    double duration = (double)(end - start) / 1000;
+    double packs_per_sec = total_packets / duration;
+
+    printf("Estadísticas:\n");
+    printf("\tDuración: %.3lf segundos\n", duration);
+    printf("\tCapturados: %d (%.2lf paquetes/s)\n", accepted, packs_per_sec);
+    printf("\tDescartados: %d (%.2lf %%)\n", total_packets - accepted, 100 - filtered_percentage);
+    printf("\tAceptados: %d (%.2lf %%)\n", accepted, filtered_percentage);
 }
