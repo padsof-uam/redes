@@ -62,6 +62,8 @@ short _filter(u_int8_t *packet, uint32_t eth_type, uint32_t ip_dst, uint32_t ip_
 
     extract(packet, ETH_ALEN * 2, 1, 16, &p_eth_type);
 
+    CHECKFOR(eth_type);
+
     packet += ETH_ALEN * 2 + ETH_TLEN; // ETH header end.
 
     extract_offset(packet, 0, 4, 1, 4, &ip_header_size);
@@ -70,18 +72,17 @@ short _filter(u_int8_t *packet, uint32_t eth_type, uint32_t ip_dst, uint32_t ip_
     extract(packet, 12, 1, 32, &p_ip_src);
     extract(packet, 16, 1, 32, &p_ip_dst);
 
+    if (p_protocol != UDP && p_protocol != TCP)
+        return 1;
+
+    CHECKFOR(ip_src);
+    CHECKFOR(ip_dst);
 
     packet += ip_header_size * 4; // IP header end.
 
     extract(packet, 0, 1, 16, &p_port_src);
     extract(packet, 2, 1, 16, &p_port_dst);
 
-    if (p_protocol != UDP && p_protocol != TCP)
-        return 1;
-
-    CHECKFOR(eth_type);
-    CHECKFOR(ip_src);
-    CHECKFOR(ip_dst);
     CHECKFOR(port_src);
     CHECKFOR(port_dst);
 
