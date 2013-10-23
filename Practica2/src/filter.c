@@ -124,7 +124,7 @@ static const char *proto_informer(const uint32_t *values)
     }
 }
 
-int analizarPaquete(u_int8_t *paquete, struct pcap_pkthdr *cabecera, args *filter_values)
+int analizarPaquete(u_int8_t *paquete, struct pcap_pkthdr *cabecera, args *filter_values, int cont)
 {
     uint32_t ip_header_size;
     uint32_t protocol;
@@ -134,6 +134,8 @@ int analizarPaquete(u_int8_t *paquete, struct pcap_pkthdr *cabecera, args *filte
 
     if (filtered != 0)
         return 0;
+
+    printf("Paquete: %d \n", cont);
 
     print_packet_field(paquete, "MAC destino", 0, 0, 8, ETH_ALEN, HEX);
     print_packet_field(paquete, "MAC origen", ETH_ALEN, 0, 8, ETH_ALEN, HEX);

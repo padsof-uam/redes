@@ -79,7 +79,7 @@ int main(const int argc, const char **argv)
 
         cont++;
 
-        if ((retorno = analizarPaquete(paquete, cabecera, &filter_values)) == ERROR)
+        if ((retorno = analizarPaquete(paquete, cabecera, &filter_values,cont)) == ERROR)
         {
             printf("Error al analizar el paquete %" PRIu64 "; %s %d.\n", cont, __FILE__, __LINE__);
             exit(retorno);
