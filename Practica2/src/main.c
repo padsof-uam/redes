@@ -22,7 +22,14 @@ void handleSignal(int nsignal)
     ctrl_pressed = 1;
 }
 
+/**
+ * Prints capture session stats.
+ */
 void print_stats(int total_packets, int accepted, long start, long end);
+
+/**
+ * Return miliseconds since epoch.
+ */
 long get_ms_time();
 
 int main(const int argc, const char **argv)
@@ -33,22 +40,21 @@ int main(const int argc, const char **argv)
     int retorno;
     int capture_retval, cont_filtered_packets = 0;
     int retval = OK;
-    args filter_values;
+    filter_params filter;
     const char *file;
     long timestart, timeend;
 
-    short parser_retval = arg_parser(argc, argv, &filter_values);
+    short parser_retval = arg_parser(argc, argv, &filter);
 
     if (parser_retval == ERROR)
     {
-        printf("Error en los argumentos introducidos\n");
+        fprintf(stderr, "Error en los argumentos introducidos.\n");
         return ERROR;
     }
 
-
     if (signal(SIGINT, handleSignal) == SIG_ERR)
     {
-        printf("Error: Fallo al capturar la senal SIGINT.\n");
+        fprintf(stderr, "Error: Fallo al capturar la senal SIGINT.\n");
         exit(ERROR);
     }
 
@@ -65,7 +71,7 @@ int main(const int argc, const char **argv)
 
     if (descr == NULL)
     {
-        printf("Error: pcap_open: File: %s, %s %s %d.\n", file, errbuf, __FILE__, __LINE__);
+        fprintf(stderr, "Error: pcap_open: File: %s, %s %s %d.\n", file, errbuf, __FILE__, __LINE__);
         exit(ERROR);
     }
 
@@ -79,9 +85,9 @@ int main(const int argc, const char **argv)
 
         cont++;
 
-        if ((retorno = analizarPaquete(paquete, cabecera, &filter_values,cont)) == ERROR)
+        if ((retorno = analizarPaquete(paquete, cabecera, &filter,cont)) == ERROR)
         {
-            printf("Error al analizar el paquete %" PRIu64 "; %s %d.\n", cont, __FILE__, __LINE__);
+            fprintf(stderr, "Error al analizar el paquete %" PRIu64 "; %s %d.\n", cont, __FILE__, __LINE__);
             exit(retorno);
         }
 
@@ -91,14 +97,14 @@ int main(const int argc, const char **argv)
 
     if (capture_retval == -1)
     {
-        printf("Error: pcap_open_offline(): File: %s, %s %s %d.\n", argv[1], errbuf, __FILE__, __LINE__);
+        fprintf(stderr, "Error: pcap_open_offline(): File: %s, %s %s %d.\n", argv[1], errbuf, __FILE__, __LINE__);
         pcap_perror(descr, "pcap error:");
 
         retval = ERROR;
     }
     else // PCAP_ERROR_BREAK es la otra salida posible, hemos llegado a final de archivo.
     {
-        printf("No hay mas paquetes.\n");
+        printf("Fin de la captura.\n");
         print_stats(cont, cont_filtered_packets, timestart, timeend);
     }
 
@@ -124,7 +130,7 @@ void print_stats(int total_packets, int accepted, long start, long end)
 
     printf("Estadísticas:\n");
     printf("\tDuración: %.3lf segundos\n", duration);
-    printf("\tCapturados: %d (%.2lf paquetes/s)\n", accepted, packs_per_sec);
+    printf("\tCapturados: %d (%.2lf paquetes/s)\n", total_packets, packs_per_sec);
     printf("\tDescartados: %d (%.2lf %%)\n", total_packets - accepted, 100 - filtered_percentage);
     printf("\tAceptados: %d (%.2lf %%)\n", accepted, filtered_percentage);
 }

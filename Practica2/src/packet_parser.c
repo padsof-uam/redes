@@ -1,8 +1,12 @@
-#include "packet_extractor.h"
-#include <stdarg.h>
+#include "packet_parser.h"
 
-
-
+/**
+ * Extracts a value from a packet.
+ * @param  packet    Packet.
+ * @param  bit_start Starting bit.
+ * @param  value     Struct where the value will be saved.
+ * @return           0 if OK, -1 otherwise. 
+ */
 static int _extract(const uint8_t *packet, int bit_start, struct packet_val *value)
 {
     int bytes_per_value;

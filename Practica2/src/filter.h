@@ -10,7 +10,7 @@
 #include <signal.h>
 #include <time.h>
 #include <stdarg.h>
-#include "packet_extractor.h"
+#include "packet_parser.h"
 
 /************************ Definicion de constantes ***********************/
 #define ETH_ALEN      6      /* Tamano de direccion ethernet             */
@@ -22,8 +22,6 @@
 #define ETH_FRAME_MIN 60     /* Tamano minimo trama ethernet (sin CRC)   */
 #define NO_FILE -20
 
-#define CHECKFOR(what) if(what != -1 && p_##what != what) return 1;
-
 
 typedef struct 
 {
@@ -31,7 +29,7 @@ typedef struct
     int ip_dst;
     int port_src;
     int port_dst; 
-} args;
+} filter_params;
 
 
 /**
@@ -39,42 +37,34 @@ typedef struct
  * @param  ipstr          The ip as string to be converted.
  * @return                The ip as an uint23_t.
  */
-
 uint32_t ip_fromstr(const char* ipstr);
 
 /**
- * Fills the strcut filter_values (given as a parameter) with the arguments given.
+ * Fills the struct filter (given as a parameter) with the arguments given.
  * @param  argc				Number of arguments given.
  * @param  argv				Array with all the arguments.
- * @param  filter_values	The struct to be filled.
+ * @param  filter			The struct to be filled.
  * @return					OK if filled correctly, ERR if some error happened.
  */
-short arg_parser(const int argc, const char **argv, args *filter_values);
-
-/* Guille xD wtf is cabecera*/
-
-int analizarPaquete(u_int8_t *paquete, struct pcap_pkthdr *cabecera, args* filter_values,int cont);
+short arg_parser(const int argc, const char **argv, filter_params *args);
 
 /**
- * Reads the packet and compares it with the filter_values.
+ * Analyzes a packet contents.
+ * @param  paquete  Packet.
+ * @param  cabecera Header
+ * @param  filter   Filter values
+ * @param  cont     Packet count
+ * @return          OK or ERR if there was an error.
+ */
+int analizarPaquete(u_int8_t *paquete, struct pcap_pkthdr *cabecera, filter_params* args,int cont);
+
+/**
+ * Reads the packet and compares it with the filter parameters.
  * @param  packet         Packet, given as an array of 1 byte values.
  * @param  eth_type		  The ethernet type to filter by.
- * @param  filter_values  The struct with all the information to filter by.          
- * @return                0 if the packet checks all the filters, others if not.
+ * @param  filter  		  The struct with all the filter parameters.          
+ * @return                0 if the packet passes all the filters, 1 if it's rejected.
  */
-short filter(u_int8_t* packet, uint32_t eth_type,args* filter_values);
-
-/**
- * Auxiliary function to filter by.
- * @param  packet         Packet, given as an array of 1 byte values.
- * @param  eth_type		  The ethernet type to filter. 
- * @param  ip_dest		  The destiny ip adrress to be filtered by.
- * @param  ip_src		  The source ip adrress to be filtered by.
- * @param  port_dst		  The destiny port to be filtered by.
- * @param  port_src		  The source port  to be filtered by.
- * @return                0 if OK, negative value if error.
- */
-short _filter(u_int8_t* packet, uint32_t eth_type, uint32_t ip_dst, uint32_t ip_src, uint32_t port_dst, uint32_t port_src);
-
+short filter(u_int8_t* packet, uint32_t eth_type,filter_params* args);
 
 #endif

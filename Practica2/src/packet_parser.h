@@ -9,12 +9,10 @@
 #include <netinet/in.h>
 #include <signal.h>
 #include <time.h>
-#include <stdarg.h>
 
 #define MAX_VAL_LEN 20
 #define ERR_UNSUPPORTED_SIZE -10
 #define ERR_UNSUPPORTED_FORMAT -11
-#define FIELD_END -1
 
 /* Tamano maximo y minimo de los datos de una trama ethernet             */
 #define ETH_DATA_MAX  (ETH_FRAME_MAX - ETH_HLEN)

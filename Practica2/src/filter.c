@@ -1,11 +1,14 @@
 #include "filter.h"
-#include "packet_extractor.h"
 
-short arg_parser(const int argc, const char **argv, args *filter_values)
+short arg_parser(const int argc, const char **argv, filter_params *args)
 {
-    short ipo = 0, ipd = 0, po = 0, pd = 0;
     short retval = OK;
     int i = 2;
+
+    args->ip_dst = -1;
+    args->ip_src = -1;
+    args->port_dst = -1;
+    args->port_src = -1;
 
     if(argc == 1 || (argc >= 2 && argv[1][0] == '-'))
     {
@@ -13,52 +16,39 @@ short arg_parser(const int argc, const char **argv, args *filter_values)
         retval = NO_FILE;
     }
 
-    // Habría que comprobar más o damos por supuesto que van a ir bien
-    for (; i < argc; i += 2)
+    for (; i < argc && retval != ERROR; i += 2)
     {
-        if (ipo == 0 && !strcmp(argv[i], "-ipo"))
-        {
-            filter_values->ip_src = ip_fromstr(argv[i + 1]);
-            ipo = 1;
-        }
-        if (ipd == 0 && !strcmp(argv[i], "-ipd"))
-        {
-            filter_values->ip_dst = ip_fromstr(argv[i + 1]);
-            ipd = 1;
-        }
-        if (po == 0 && !strcmp(argv[i], "-po"))
-        {
-            filter_values->port_src = atoi(argv[i + 1]);
-            po = 1;
-        }
-        if (pd == 0 && !strcmp(argv[i], "-pd"))
-        {
-            filter_values->port_dst = atoi(argv[i + 1]);
-            pd = 1;
-        }
+        if (args->ip_src == -1 && !strcmp(argv[i], "-ipo"))
+            args->ip_src = ip_fromstr(argv[i + 1]);
+        else if (args->ip_dst == -1 && !strcmp(argv[i], "-ipd"))
+            args->ip_dst = ip_fromstr(argv[i + 1]);
+        else if (args->port_src == -1 && !strcmp(argv[i], "-po"))
+            args->port_src = atoi(argv[i + 1]);
+        else if (args->port_dst == -1 && !strcmp(argv[i], "-pd"))
+            args->port_dst = atoi(argv[i + 1]);
+        else
+            retval = ERROR; // Unknown or repeated parameter.
     }
-
-    if (ipo == 0)
-        filter_values->ip_src = -1;
-    if (ipd == 0)
-        filter_values->ip_dst = -1;
-    if (po == 0)
-        filter_values->port_src = -1;
-    if (pd == 0)
-        filter_values->port_dst = -1;
 
     return retval;
 }
 
-short filter(u_int8_t *packet, uint32_t eth_type, args *filter_values)
-{
-    return _filter(packet, eth_type, filter_values->ip_dst, filter_values->ip_src, filter_values->port_dst, filter_values->port_src);
-}
+/**
+ * Macro to reject a packet based on a parameter
+ * @param  what Valor a parameters.
+ */
+#define CHECKFOR(what) if(what != -1 && p_##what != what) return 1;
 
-short _filter(u_int8_t *packet, uint32_t eth_type, uint32_t ip_dst, uint32_t ip_src, uint32_t port_dst, uint32_t port_src)
+short filter(u_int8_t *packet, uint32_t eth_type, filter_params *args)
 {
     uint32_t p_eth_type, p_protocol, p_ip_dst, p_ip_src, p_port_dst, p_port_src;
+    uint32_t ip_dst, ip_src, port_dst, port_src;
     uint32_t ip_header_size;
+
+    ip_dst = args->ip_dst;
+    ip_src = args->ip_src;
+    port_dst = args->port_dst;
+    port_src = args->port_src;
 
     extract(packet, ETH_ALEN * 2, 1, 16, &p_eth_type);
 
@@ -111,6 +101,9 @@ uint32_t ip_fromstr(const char *ipstr)
     return val;
 }
 
+/**
+ * Returns a string describing the protocol of the packet
+ */
 static const char *proto_informer(const uint32_t *values)
 {
     switch (values[0])
@@ -124,26 +117,27 @@ static const char *proto_informer(const uint32_t *values)
     }
 }
 
-int analizarPaquete(u_int8_t *paquete, struct pcap_pkthdr *cabecera, args *filter_values, int cont)
+int analizarPaquete(u_int8_t *paquete, struct pcap_pkthdr *cabecera, filter_params *args, int cont)
 {
     uint32_t ip_header_size;
     uint32_t protocol;
     int filtered;
 
-    filtered = filter(paquete, 2048, filter_values);
+    filtered = filter(paquete, 0x0800, args);
 
     if (filtered != 0)
         return 0;
 
-    printf("Paquete: %d \n", cont);
+    printf("Paquete n. %d \n", cont);
 
     print_packet_field(paquete, "MAC destino", 0, 0, 8, ETH_ALEN, HEX);
     print_packet_field(paquete, "MAC origen", ETH_ALEN, 0, 8, ETH_ALEN, HEX);
     print_packet_field(paquete, "Tipo ETH", ETH_ALEN * 2, 0, 16, 1, HEX);
 
-    //Fin encapsulamiento Ethernet
+    // ETH end.
     paquete += ETH_ALEN * 2 + ETH_TLEN;
-    //IP: version IP, longitud de cabecera, longitud total, posicion, tiempo de vida, protocolo, y ambas direcciones IP
+    
+    // IP Start.
     print_packet_field(paquete, "Versión IP", 0, 0, 4, 1, DEC);
     print_packet_field(paquete, "Long. header", 0, 4, 4, 1, DEC);
     print_packet_field(paquete, "Longitud", 2, 0, 16, 1, DEC);
@@ -156,15 +150,15 @@ int analizarPaquete(u_int8_t *paquete, struct pcap_pkthdr *cabecera, args *filte
     extract(paquete, 9, 1, 8, &protocol);
     extract_offset(paquete, 0, 4, 1, 4, &ip_header_size);
 
+    // IP end.
     paquete += ip_header_size * 4;
 
+    // TCP/UDP start.
     print_packet_field(paquete, "Puerto origen", 0, 0, 16, 1, DEC);
     print_packet_field(paquete, "Puerto destino", 2, 0, 16, 1, DEC);
 
     if (protocol == UDP)
-    {
         print_packet_field(paquete, "Long. UDP", 4, 0, 16, 1, DEC);
-    }
 
     printf("\n");
 
