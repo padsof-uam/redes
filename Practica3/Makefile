@@ -1,5 +1,5 @@
-GCC = $(CC)
-CFLAGS = -ggdb -std=gnu99 -Wall -pedantic
+GCC = g++
+CPPFLAGS = -ggdb -Wall -pedantic
 LIBS = -lpcap
 TARGET = main
 
@@ -7,7 +7,7 @@ OBJDIR = obj
 SRCDIR = src
 BINDIR = bin
 
-OBJS := $(addprefix $(OBJDIR)/, $(patsubst %.c,%.o, $(wildcard $(SRCDIR)/*.c)))
+OBJS := $(addprefix $(OBJDIR)/, $(patsubst %.cpp,%.o, $(wildcard $(SRCDIR)/*.cpp)))
 
 .PRECIOUS: %.o 
 .PHONY: debug clean 
@@ -19,10 +19,10 @@ $(OBJS): | $(OBJDIR)
 
 $(TARGET): $(OBJDIR)/src/main.o $(OBJS) | $(BINDIR)
 	@echo Building final target: $@
-	@$(GCC) $(CFLAGS) -o $(BINDIR)/$@ $^ $(LIBS)
-$(OBJDIR)/%.o: %.c | $(OBJDIR)
+	@$(GCC) $(CPPFLAGS) -o $(BINDIR)/$@ $^ $(LIBS)
+$(OBJDIR)/%.o: %.cpp | $(OBJDIR)
 	@echo "$< -> $@"
-	@$(GCC) $(CFLAGS) -c $< -o $@
+	@$(GCC) $(CPPFLAGS) -c $< -o $@
 $(OBJDIR):
 	@echo Creating obj directories
 	@mkdir -p $(OBJDIR)

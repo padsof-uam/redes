@@ -12,17 +12,6 @@
 #include <stdarg.h>
 #include "packet_parser.h"
 
-/************************ Definicion de constantes ***********************/
-#define ETH_ALEN      6      /* Tamano de direccion ethernet             */
-#define ETH_HLEN      14     /* Tamano de cabecera ethernet              */
-#define ETH_TLEN      2      /* Tamano del campo tipo ethernet           */
-#define TCP 6                /* Protocolo TCP                            */
-#define UDP 17               /* Protocolo UDP                            */
-#define ETH_FRAME_MAX 1514   /* Tamano maximo trama ethernet (sin CRC)   */
-#define ETH_FRAME_MIN 60     /* Tamano minimo trama ethernet (sin CRC)   */
-#define NO_FILE -20
-
-
 typedef struct 
 {
     int ip_src;
@@ -31,6 +20,8 @@ typedef struct
     int port_dst; 
 } filter_params;
 
+
+void ip_tostr(uint32_t ip, char* ipstr);
 
 /**
  * Converts an ip from string to uint32_t.
