@@ -1,14 +1,13 @@
 #define __STDC_FORMAT_MACROS 1
 
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstdio>
 #include <inttypes.h>
 #include <pcap.h>
 #include <string.h>
 #include <netinet/in.h>
 #include <signal.h>
 #include <time.h>
-#include <error.h>
+#include <errno.h>
 
 #include "filter.h"
 #include "stats.h"
@@ -16,9 +15,6 @@
 void handleSignal(int nsignal);
 
 volatile sig_atomic_t ctrl_pressed = 0;
-
-pcap_t *descr;
-u_int64_t cont = 0;
 
 void handleSignal(int nsignal)
 {
@@ -38,6 +34,7 @@ long get_ms_time();
 
 int main(const int argc, const char **argv)
 {
+    pcap_t* descr;
     char errbuf[PCAP_ERRBUF_SIZE];
     u_int8_t *paquete;
     char * err_msg = (char *) calloc(50, sizeof(char));
@@ -50,6 +47,7 @@ int main(const int argc, const char **argv)
     long timestart, timeend;
     Stats stats;
     FILE* f_sizes;
+    int cont = 0;
 
     short parser_retval = arg_parser(argc, argv, &filter);
 
@@ -90,8 +88,7 @@ int main(const int argc, const char **argv)
 
     if(f_sizes == NULL)
     {
-        sprintf(err_msg, "Error: fopen: File: sizes, %s %d.\n", __FILE__, __LINE__);
-        perror(err_msg);
+        fprintf(stderr, "Error: fopen: %s. File: sizes, %s %d.\n", strerror(errno), __FILE__, __LINE__);
         exit(ERROR);
     }
 
@@ -109,7 +106,7 @@ int main(const int argc, const char **argv)
 
         if ((retorno = analizarPaquete(paquete, cabecera, &filter,cont)) == ERROR)
         {
-            fprintf(stderr, "Error al analizar el paquete %" PRIu64 "; %s %d.\n", cont, __FILE__, __LINE__);
+            fprintf(stderr, "Error al analizar el paquete %d; %s %d.\n", cont, __FILE__, __LINE__);
             exit(retorno);
         }
         cont_filtered_packets += retorno;
