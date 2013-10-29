@@ -45,9 +45,7 @@ int main(const int argc, const char **argv)
     int retval = OK;
     filter_params fparams;
     const char *file;
-    
     Stats stats;
-    FILE* f_sizes;
     int cont = 0;
 
     short parser_retval = arg_parser(argc, argv, &fparams);
@@ -77,14 +75,6 @@ int main(const int argc, const char **argv)
         exit(ERROR);
     }
 
-    f_sizes = fopen("sizes", "w");
-
-    if(f_sizes == NULL)
-    {
-        fprintf(stderr, "Error: fopen: %s. File: sizes, %s %d.\n", strerror(errno), __FILE__, __LINE__);
-        exit(ERROR);
-    }
-
     printf("Leyendo paquetes en %s...\n", file);
 
     stats.start();
@@ -94,13 +84,13 @@ int main(const int argc, const char **argv)
             break;
 
         cont++;
-        fprintf(f_sizes, "%d\n", cabecera->len);
 
         if ((retorno = analizarPaquete(paquete, cabecera, &fparams,cont)) == ERROR)
         {
             fprintf(stderr, "Error al analizar el paquete %d; %s %d.\n", cont, __FILE__, __LINE__);
             exit(retorno);
         }
+        
         stats.mark_arrival(fparams.port_dst, fparams.port_src);
         stats.parse_packet(paquete, cabecera, retorno);
     }

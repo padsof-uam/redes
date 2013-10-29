@@ -2,6 +2,7 @@
 #include "filter.h"
 #include <list>
 #include <utility>
+#include <errno.h>
 
 static long get_ms_time()
 {
@@ -22,13 +23,25 @@ Stats::Stats()
     accepted_packets = 0;
     total_packets = 0;
     total_size = 0;
+    arrival_times = NULL;
+    f_sizes = NULL;
 
     arrival_times = fopen(ARRIVAL_TIMES_FILE, "w");
+    f_sizes = fopen(SIZES_FILE, "w");
+
+    if (!f_sizes)
+        fprintf(stderr, "Error: fopen: %s. File: %s, %s %d.\n", strerror(errno), SIZES_FILE, __FILE__, __LINE__);
+    if (!arrival_times)
+        fprintf(stderr, "Error: fopen: %s. File: %s, %s %d.\n", strerror(errno), ARRIVAL_TIMES_FILE, __FILE__, __LINE__);
 }
 
 Stats::~Stats()
 {
-	fclose(arrival_times);
+    if (arrival_times)
+        fclose(arrival_times);
+
+    if (f_sizes)
+        fclose(f_sizes);
 }
 
 endpoint_data &Stats::get_or_create(map<uint32_t, endpoint_data> &map, uint32_t key)
@@ -56,6 +69,9 @@ int Stats::parse_packet(const uint8_t *packet, const struct pcap_pkthdr *header,
 
     if (accepted)
         total_size += header->len;
+
+    if(f_sizes)
+        fprintf(f_sizes, "%d\n", header->len);
 
     extract(packet, ETH_ALEN * 2, 1, 16, &p_eth_type);
 
@@ -226,14 +242,15 @@ void Stats::stop()
 
 void Stats::mark_arrival(const int port_dst, const int port_src)
 {
-	long current;
+    long current;
 
     if (port_dst == -1 || port_src == -1)
         return;
 
     current = get_ms_time();
 
-    fprintf(arrival_times, "%ld\n", current - last_time_received);
+    if(arrival_times)
+        fprintf(arrival_times, "%ld\n", current - last_time_received);
 
     last_time_received = current;
 }

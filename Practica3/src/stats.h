@@ -5,6 +5,7 @@
 using namespace std;
 
 #define ARRIVAL_TIMES_FILE "arrivals"
+#define SIZES_FILE "sizes"
 
 typedef struct {
 	int bytes_received;
@@ -25,6 +26,7 @@ private:
 	long timestart, timeend;
 	int accepted_packets;
 	FILE* arrival_times;
+	FILE* f_sizes;
 	long last_time_received;
 
 	endpoint_data& get_or_create(map<uint32_t, endpoint_data> &map, uint32_t key);
