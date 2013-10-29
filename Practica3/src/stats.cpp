@@ -22,6 +22,13 @@ Stats::Stats()
     accepted_packets = 0;
     total_packets = 0;
     total_size = 0;
+
+    arrival_times = fopen(ARRIVAL_TIMES_FILE, "w");
+}
+
+Stats::~Stats()
+{
+	fclose(arrival_times);
 }
 
 endpoint_data &Stats::get_or_create(map<uint32_t, endpoint_data> &map, uint32_t key)
@@ -47,9 +54,9 @@ int Stats::parse_packet(const uint8_t *packet, const struct pcap_pkthdr *header,
     total_packets++;
     accepted_packets += accepted;
 
-    if(accepted)
-    	total_size += header->len;
-    
+    if (accepted)
+        total_size += header->len;
+
     extract(packet, ETH_ALEN * 2, 1, 16, &p_eth_type);
 
     packet += ETH_ALEN * 2 + ETH_TLEN; // ETH header end.
@@ -112,75 +119,75 @@ int Stats::parse_packet(const uint8_t *packet, const struct pcap_pkthdr *header,
 
 bool compare_pair(std::pair<uint32_t, int> a, std::pair<uint32_t, int> b)
 {
-	return a.second > b.second;
+    return a.second > b.second;
 }
 
-static int select_bytes_received(endpoint_data& data)
+static int select_bytes_received(endpoint_data &data)
 {
-	return data.bytes_received;
+    return data.bytes_received;
 }
 
-static int select_bytes_sent(endpoint_data& data)
+static int select_bytes_sent(endpoint_data &data)
 {
-	return data.bytes_sent;
+    return data.bytes_sent;
 }
 
-static int select_packs_sent(endpoint_data& data)
+static int select_packs_sent(endpoint_data &data)
 {
-	return data.packs_sent;
+    return data.packs_sent;
 }
 
-static int select_packs_received(endpoint_data& data)
+static int select_packs_received(endpoint_data &data)
 {
-	return data.packs_received;
+    return data.packs_received;
 }
 
-void Stats::print_top_five(std::map<uint32_t, endpoint_data> &map, selector sel, const char* title, int print_ip)
+void Stats::print_top_five(std::map<uint32_t, endpoint_data> &map, selector sel, const char *title, int print_ip)
 {
-	std::list<pair<uint32_t, int> > pairs;
-	std::map<uint32_t, endpoint_data>::iterator iter;
-	std::list<pair<uint32_t, int> >::iterator p_iter;
-	int i = 0;
-	char ipstr[20];
+    std::list<pair<uint32_t, int> > pairs;
+    std::map<uint32_t, endpoint_data>::iterator iter;
+    std::list<pair<uint32_t, int> >::iterator p_iter;
+    int i = 0;
+    char ipstr[20];
 
-	for(iter = map.begin(); iter != map.end(); iter++)
-		pairs.push_back(std::make_pair(iter->first, sel(iter->second)));
+    for (iter = map.begin(); iter != map.end(); iter++)
+        pairs.push_back(std::make_pair(iter->first, sel(iter->second)));
 
-	pairs.sort(compare_pair);
+    pairs.sort(compare_pair);
 
-	printf("%s:\n", title);
+    printf("%s:\n", title);
 
-	for(p_iter = pairs.begin(); p_iter != pairs.end() && i < 5; p_iter++, i++)
-	{
-		if(print_ip)
-		{
-			ip_tostr(p_iter->first, ipstr);
-			printf("\t%s:   ", ipstr);
-		}
-		else
-		{
-			printf("\t%" PRIu32 ":", p_iter->first);
-		}
+    for (p_iter = pairs.begin(); p_iter != pairs.end() && i < 5; p_iter++, i++)
+    {
+        if (print_ip)
+        {
+            ip_tostr(p_iter->first, ipstr);
+            printf("\t%s:   ", ipstr);
+        }
+        else
+        {
+            printf("\t%" PRIu32 ":", p_iter->first);
+        }
 
-		printf("\t %d\n", p_iter->second);
-	}	
+        printf("\t %d\n", p_iter->second);
+    }
 
-	printf("\n");
+    printf("\n");
 }
 
 void Stats::stats_for(std::map<uint32_t, endpoint_data> &map, int print_ip)
 {
-	print_top_five(map, select_bytes_received, "Bytes recibidos", print_ip);
-	print_top_five(map, select_bytes_sent, "Bytes enviados", print_ip);
-	print_top_five(map, select_packs_received, "Paquetes recibidos", print_ip);
-	print_top_five(map, select_packs_sent, "Paquetes enviados", print_ip);
+    print_top_five(map, select_bytes_received, "Bytes recibidos", print_ip);
+    print_top_five(map, select_bytes_sent, "Bytes enviados", print_ip);
+    print_top_five(map, select_packs_received, "Paquetes recibidos", print_ip);
+    print_top_five(map, select_packs_sent, "Paquetes enviados", print_ip);
 }
 
 int Stats::print_stats()
 {
-	std::map<uint32_t, endpoint_data>::iterator iter;
+    std::map<uint32_t, endpoint_data>::iterator iter;
 
-	double filtered_percentage = 100 * (double) accepted_packets / total_packets;
+    double filtered_percentage = 100 * (double) accepted_packets / total_packets;
     double duration = (double)(timeend - timestart) / 1000;
     double packs_per_sec = total_packets / duration;
     double throughput = total_size / duration;
@@ -192,28 +199,43 @@ int Stats::print_stats()
     printf("\tAceptados: %d (%.2lf %%)\n", accepted_packets, filtered_percentage);
     printf("\tThroughput: %.2lf Bps\n", throughput);
     printf("\n");
-	printf("\tPaquetes no IP:\t %d (%.2f %%)\n", noip, 100 * (double) noip / total_packets);
-	printf("\tPaquetes IP:\t %d (%.2f %%)\n", ip, 100 * (double) ip / total_packets);
-	printf("\tPaquetes TCP:\t %d (%.2f %%)\n", tcp, 100 * (double) tcp / total_packets);
-	printf("\tPaquetes UDP:\t %d (%.2f %%)\n", udp, 100 * (double) udp / total_packets);
-	printf("\tPaquetes no TCP/UDP:\t %d (%.2f %%)\n", notcpudp, 100 * (double) notcpudp / total_packets);
-	printf("\n");
+    printf("\tPaquetes no IP:\t %d (%.2f %%)\n", noip, 100 * (double) noip / total_packets);
+    printf("\tPaquetes IP:\t %d (%.2f %%)\n", ip, 100 * (double) ip / total_packets);
+    printf("\tPaquetes TCP:\t %d (%.2f %%)\n", tcp, 100 * (double) tcp / total_packets);
+    printf("\tPaquetes UDP:\t %d (%.2f %%)\n", udp, 100 * (double) udp / total_packets);
+    printf("\tPaquetes no TCP/UDP:\t %d (%.2f %%)\n", notcpudp, 100 * (double) notcpudp / total_packets);
+    printf("\n");
 
-	printf("===== Top 5 IPs =====\n");
-	stats_for(ip_map, 1);
+    printf("===== Top 5 IPs =====\n");
+    stats_for(ip_map, 1);
 
-	printf("===== Top 5 puertos =====\n");
-	stats_for(port_map, 0);
+    printf("===== Top 5 puertos =====\n");
+    stats_for(port_map, 0);
 
-	return 0;
+    return 0;
 }
 
 void Stats::start()
 {
-	timestart = get_ms_time();
+    timestart = get_ms_time();
+    last_time_received = timestart;
 }
 
 void Stats::stop()
 {
-	timeend = get_ms_time();
+    timeend = get_ms_time();
+}
+
+void Stats::mark_arrival(const int port_dst, const int port_src)
+{
+	long current;
+
+    if (port_dst == -1 || port_src == -1)
+        return;
+
+    current = get_ms_time();
+
+    fprintf(arrival_times, "%ld\n", current - last_time_received);
+
+    last_time_received = current;
 }
