@@ -1,16 +1,37 @@
 #include "filter.h"
 
-void ip_tostr(uint32_t ip, char* ipstr)
+void ip_tostr(uint32_t ip, char *ipstr)
 {
     uint8_t ip_array[4];
 
     memcpy(ip_array, &ip, sizeof(4));
 
-    sprintf(ipstr, "%" PRIu8 ".%" PRIu8 ".%" PRIu8 ".%" PRIu8, 
-        ip_array[3], 
-        ip_array[2], 
-        ip_array[1], 
-        ip_array[0]);
+    sprintf(ipstr, "%" PRIu8 ".%" PRIu8 ".%" PRIu8 ".%" PRIu8,
+            ip_array[3],
+            ip_array[2],
+            ip_array[1],
+            ip_array[0]);
+}
+
+short eth_fromstr(const char *ethstr, uint8_t *eth)
+{
+    char *dup = strdup(ethstr);
+    char *tofree = dup;
+    char *token;
+    int i;
+
+    for (i = 5; i >= 0; i--)
+    {
+        token = strsep(&dup, ":");
+
+        if (token == NULL)
+            return -1;
+
+        eth[i] = atoi(token);
+    }
+
+    free(tofree);
+    return 0;
 }
 
 short arg_parser(const int argc, const char **argv, filter_params *args)
@@ -18,12 +39,14 @@ short arg_parser(const int argc, const char **argv, filter_params *args)
     short retval = OK;
     int i = 2;
 
+    args->has_eth_src = 0;
+    args->has_eth_dst = 0;
     args->ip_dst = -1;
     args->ip_src = -1;
     args->port_dst = -1;
     args->port_src = -1;
 
-    if(argc == 1 || (argc >= 2 && argv[1][0] == '-'))
+    if (argc == 1 || (argc >= 2 && argv[1][0] == '-'))
     {
         i = 1;
         retval = NO_FILE;
@@ -39,6 +62,16 @@ short arg_parser(const int argc, const char **argv, filter_params *args)
             args->port_src = atoi(argv[i + 1]);
         else if (args->port_dst == -1 && !strcmp(argv[i], "-pd"))
             args->port_dst = atoi(argv[i + 1]);
+        else if (!args->has_eth_src && !strcmp(argv[i], "-etho"))
+        {
+            eth_fromstr(argv[i + 1], args->eth_src);
+            args->has_eth_src = 1;
+        }
+        else if (!args->has_eth_dst && !strcmp(argv[i], "-ethd"))
+        {
+            eth_fromstr(argv[i + 1], args->eth_dst);
+            args->has_eth_dst = 1;
+        }
         else
             retval = ERROR; // Unknown or repeated parameter.
     }
@@ -52,9 +85,22 @@ short arg_parser(const int argc, const char **argv, filter_params *args)
  */
 #define CHECKFOR(what) if(what != -1 && p_##what != what) return 1;
 
+static int eth_equal(uint32_t *eth_a, uint8_t *eth_b)
+{
+    int i = 0;
+    for (i = 0; i < 6; i++)
+    {
+        if (eth_a[i] != eth_b[i])
+            return 0;
+    }
+
+    return 1;
+}
+
 short filter(u_int8_t *packet, uint32_t eth_type, filter_params *args)
 {
     uint32_t p_eth_type, p_protocol, p_ip_dst, p_ip_src, p_port_dst, p_port_src;
+    uint32_t p_eth_src[6], p_eth_dst[6];
     uint32_t ip_dst, ip_src, port_dst, port_src;
     uint32_t ip_header_size;
 
@@ -64,6 +110,14 @@ short filter(u_int8_t *packet, uint32_t eth_type, filter_params *args)
     port_src = args->port_src;
 
     extract(packet, ETH_ALEN * 2, 1, 16, &p_eth_type);
+    extract(packet, 0, 6, 8, p_eth_dst);
+    extract(packet, 6, 6, 8, p_eth_src);
+
+    if (args->has_eth_dst && !eth_equal(p_eth_dst, args->eth_dst))
+        return 1;
+    if (args->has_eth_src && !eth_equal(p_eth_dst, args->eth_src))
+        return 1;
+
 
     CHECKFOR(eth_type);
 
@@ -121,12 +175,12 @@ static const char *proto_informer(const uint32_t *values)
 {
     switch (values[0])
     {
-        case TCP:
-            return "TCP";
-        case UDP:
-            return "UDP";
-        default:
-            return "Unknown";
+    case TCP:
+        return "TCP";
+    case UDP:
+        return "UDP";
+    default:
+        return "Unknown";
     }
 }
 
@@ -149,7 +203,7 @@ int analizarPaquete(u_int8_t *paquete, struct pcap_pkthdr *cabecera, filter_para
 
     // ETH end.
     paquete += ETH_ALEN * 2 + ETH_TLEN;
-    
+
     // IP Start.
     print_packet_field(paquete, "Versión IP", 0, 0, 4, 1, DEC);
     print_packet_field(paquete, "Long. header", 0, 4, 4, 1, DEC);

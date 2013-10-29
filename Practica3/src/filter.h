@@ -15,10 +15,14 @@
 
 typedef struct 
 {
-    int ip_src;
-    int ip_dst;
-    int port_src;
-    int port_dst; 
+    uint32_t ip_src;
+    uint32_t ip_dst;
+    uint16_t port_src;
+    uint16_t port_dst; 
+    uint8_t eth_src[6];
+    uint8_t eth_dst[6];
+    short has_eth_src;
+    short has_eth_dst;
 } filter_params;
 
 
@@ -30,6 +34,9 @@ void ip_tostr(uint32_t ip, char* ipstr);
  * @return                The ip as an uint23_t.
  */
 uint32_t ip_fromstr(const char* ipstr);
+
+
+short eth_fromstr(const char* ethstr, uint8_t* eth);
 
 /**
  * Fills the struct filter (given as a parameter) with the arguments given.

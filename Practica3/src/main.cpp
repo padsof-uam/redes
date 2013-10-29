@@ -37,14 +37,13 @@ int main(const int argc, const char **argv)
     pcap_t* descr;
     char errbuf[PCAP_ERRBUF_SIZE];
     u_int8_t *paquete;
-    char * err_msg = (char *) calloc(50, sizeof(char));
     struct pcap_pkthdr *cabecera;
     int retorno;
     int capture_retval, cont_filtered_packets = 0;
     int retval = OK;
     filter_params filter;
     const char *file;
-    long timestart, timeend;
+    
     Stats stats;
     FILE* f_sizes;
     int cont = 0;
@@ -94,7 +93,7 @@ int main(const int argc, const char **argv)
 
     printf("Leyendo paquetes en %s...\n", file);
 
-    timestart = get_ms_time();
+    stats.start();
     while (ctrl_pressed == 0 && (capture_retval = pcap_next_ex(descr, &cabecera, (const u_char **) (&paquete))) == 1)
     {
         if(ctrl_pressed)
@@ -102,16 +101,16 @@ int main(const int argc, const char **argv)
 
         cont++;
         fprintf(f_sizes, "%d\n", cabecera->len);
-        stats.parse_packet(paquete, cabecera);
 
         if ((retorno = analizarPaquete(paquete, cabecera, &filter,cont)) == ERROR)
         {
             fprintf(stderr, "Error al analizar el paquete %d; %s %d.\n", cont, __FILE__, __LINE__);
             exit(retorno);
         }
-        cont_filtered_packets += retorno;
+
+        stats.parse_packet(paquete, cabecera, retorno);
     }
-    timeend = get_ms_time();
+    stats.stop();
 
     if (capture_retval == -1)
     {
@@ -124,7 +123,6 @@ int main(const int argc, const char **argv)
     {
         printf("Fin de la captura.\n");
         stats.print_stats();
-        print_stats(cont, cont_filtered_packets, timestart, timeend);
     }
 
     pcap_close(descr);
@@ -132,24 +130,3 @@ int main(const int argc, const char **argv)
     return retval;
 }
 
-long get_ms_time()
-{
-    struct timeval tval;
-
-    gettimeofday(&tval, NULL);
-
-    return tval.tv_sec * 1000 + tval.tv_usec / 1000;
-}
-
-void print_stats(int total_packets, int accepted, long start, long end)
-{
-    double filtered_percentage = 100 * (double) accepted / total_packets;
-    double duration = (double)(end - start) / 1000;
-    double packs_per_sec = total_packets / duration;
-
-    printf("Estadísticas:\n");
-    printf("\tDuración: %.3lf segundos\n", duration);
-    printf("\tCapturados: %d (%.2lf paquetes/s)\n", total_packets, packs_per_sec);
-    printf("\tDescartados: %d (%.2lf %%)\n", total_packets - accepted, 100 - filtered_percentage);
-    printf("\tAceptados: %d (%.2lf %%)\n", accepted, filtered_percentage);
-}

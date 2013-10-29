@@ -3,6 +3,15 @@
 #include <list>
 #include <utility>
 
+static long get_ms_time()
+{
+    struct timeval tval;
+
+    gettimeofday(&tval, NULL);
+
+    return tval.tv_sec * 1000 + tval.tv_usec / 1000;
+}
+
 Stats::Stats()
 {
     ip = 0;
@@ -10,6 +19,9 @@ Stats::Stats()
     udp = 0;
     tcp = 0;
     notcpudp = 0;
+    accepted_packets = 0;
+    total_packets = 0;
+    total_size = 0;
 }
 
 endpoint_data &Stats::get_or_create(map<uint32_t, endpoint_data> &map, uint32_t key)
@@ -27,11 +39,17 @@ endpoint_data &Stats::get_or_create(map<uint32_t, endpoint_data> &map, uint32_t 
     return map[key];
 }
 
-int Stats::parse_packet(const uint8_t *packet, const struct pcap_pkthdr *header)
+int Stats::parse_packet(const uint8_t *packet, const struct pcap_pkthdr *header, short accepted)
 {
     uint32_t p_eth_type, p_protocol, p_ip_dst, p_ip_src, p_port_dst, p_port_src;
     uint32_t ip_header_size;
 
+    total_packets++;
+    accepted_packets += accepted;
+
+    if(accepted)
+    	total_size += header->len;
+    
     extract(packet, ETH_ALEN * 2, 1, 16, &p_eth_type);
 
     packet += ETH_ALEN * 2 + ETH_TLEN; // ETH header end.
@@ -161,14 +179,24 @@ void Stats::stats_for(std::map<uint32_t, endpoint_data> &map, int print_ip)
 int Stats::print_stats()
 {
 	std::map<uint32_t, endpoint_data>::iterator iter;
-	int total = ip + noip;
 
-	printf("Paquetes no IP:\t %d (%.2f %%)\n", noip, 100 * (double) noip / total);
-	printf("Paquetes IP:\t %d (%.2f %%)\n", ip, 100 * (double) ip / total);
-	printf("Paquetes TCP:\t %d (%.2f %%)\n", tcp, 100 * (double) tcp / total);
-	printf("Paquetes UDP:\t %d (%.2f %%)\n", udp, 100 * (double) udp / total);
-	printf("Paquetes no TCP/UDP:\t %d (%.2f %%)\n", notcpudp, 100 * (double) notcpudp / total);
+	double filtered_percentage = 100 * (double) accepted_packets / total_packets;
+    double duration = (double)(timeend - timestart) / 1000;
+    double packs_per_sec = total_packets / duration;
+    double throughput = total_size / duration;
 
+    printf("Estadísticas:\n");
+    printf("\tDuración: %.3lf segundos\n", duration);
+    printf("\tCapturados: %d (%.2lf paquetes/s)\n", total_packets, packs_per_sec);
+    printf("\tDescartados: %d (%.2lf %%)\n", total_packets - accepted_packets, 100 - filtered_percentage);
+    printf("\tAceptados: %d (%.2lf %%)\n", accepted_packets, filtered_percentage);
+    printf("\tThroughput: %.2lf Bps\n", throughput);
+    printf("\n");
+	printf("\tPaquetes no IP:\t %d (%.2f %%)\n", noip, 100 * (double) noip / total_packets);
+	printf("\tPaquetes IP:\t %d (%.2f %%)\n", ip, 100 * (double) ip / total_packets);
+	printf("\tPaquetes TCP:\t %d (%.2f %%)\n", tcp, 100 * (double) tcp / total_packets);
+	printf("\tPaquetes UDP:\t %d (%.2f %%)\n", udp, 100 * (double) udp / total_packets);
+	printf("\tPaquetes no TCP/UDP:\t %d (%.2f %%)\n", notcpudp, 100 * (double) notcpudp / total_packets);
 	printf("\n");
 
 	printf("===== Top 5 IPs =====\n");
@@ -178,4 +206,14 @@ int Stats::print_stats()
 	stats_for(port_map, 0);
 
 	return 0;
+}
+
+void Stats::start()
+{
+	timestart = get_ms_time();
+}
+
+void Stats::stop()
+{
+	timeend = get_ms_time();
 }
