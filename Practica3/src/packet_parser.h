@@ -3,7 +3,7 @@
 
 #define __STDC_FORMAT_MACROS 1
 
-#include <stdio.h>
+#include <cstdio>
 #include <stdlib.h>
 #include <inttypes.h>
 #include <pcap.h>

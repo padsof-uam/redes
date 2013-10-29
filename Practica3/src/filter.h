@@ -1,7 +1,8 @@
+#define __STDC_FORMAT_MACROS 1
 #ifndef FILTER_H
 #define FILTER_H
 
-#include <stdio.h>
+#include <cstdio>
 #include <stdlib.h>
 #include <inttypes.h>
 #include <pcap.h>

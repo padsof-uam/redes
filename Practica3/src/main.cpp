@@ -40,6 +40,7 @@ int main(const int argc, const char **argv)
 {
     char errbuf[PCAP_ERRBUF_SIZE];
     u_int8_t *paquete;
+    char * err_msg = (char *) calloc(50, sizeof(char));
     struct pcap_pkthdr *cabecera;
     int retorno;
     int capture_retval, cont_filtered_packets = 0;
@@ -64,6 +65,10 @@ int main(const int argc, const char **argv)
         exit(ERROR);
     }
 
+    if (argv[1])
+    {
+        
+    }
     if (parser_retval == NO_FILE)
     {
         descr = pcap_open_live("eth0", 100, 0, 0, errbuf);
@@ -85,7 +90,8 @@ int main(const int argc, const char **argv)
 
     if(f_sizes == NULL)
     {
-        perror("Error: fopen: File: sizes, %s %d.\n", __FILE__, __LINE__);
+        sprintf(err_msg, "Error: fopen: File: sizes, %s %d.\n", __FILE__, __LINE__);
+        perror(err_msg);
         exit(ERROR);
     }
 
