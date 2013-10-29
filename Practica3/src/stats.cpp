@@ -185,8 +185,6 @@ void Stats::stats_for(std::map<uint32_t, endpoint_data> &map, int print_ip)
 
 int Stats::print_stats()
 {
-    std::map<uint32_t, endpoint_data>::iterator iter;
-
     double filtered_percentage = 100 * (double) accepted_packets / total_packets;
     double duration = (double)(timeend - timestart) / 1000;
     double packs_per_sec = total_packets / duration;

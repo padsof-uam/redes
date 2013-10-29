@@ -43,14 +43,14 @@ int main(const int argc, const char **argv)
     int retorno;
     int capture_retval;
     int retval = OK;
-    filter_params filter;
+    filter_params fparams;
     const char *file;
     
     Stats stats;
     FILE* f_sizes;
     int cont = 0;
 
-    short parser_retval = arg_parser(argc, argv, &filter);
+    short parser_retval = arg_parser(argc, argv, &fparams);
 
     if (parser_retval == ERROR)
     {
@@ -96,12 +96,12 @@ int main(const int argc, const char **argv)
         cont++;
         fprintf(f_sizes, "%d\n", cabecera->len);
 
-        if ((retorno = analizarPaquete(paquete, cabecera, &filter,cont)) == ERROR)
+        if ((retorno = analizarPaquete(paquete, cabecera, &fparams,cont)) == ERROR)
         {
             fprintf(stderr, "Error al analizar el paquete %d; %s %d.\n", cont, __FILE__, __LINE__);
             exit(retorno);
         }
-
+        stats.mark_arrival(fparams.port_dst, fparams.port_src);
         stats.parse_packet(paquete, cabecera, retorno);
     }
     stats.stop();
