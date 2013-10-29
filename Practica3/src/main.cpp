@@ -39,7 +39,7 @@ int main(const int argc, const char **argv)
     u_int8_t *paquete;
     struct pcap_pkthdr *cabecera;
     int retorno;
-    int capture_retval, cont_filtered_packets = 0;
+    int capture_retval;
     int retval = OK;
     filter_params filter;
     const char *file;
@@ -62,20 +62,12 @@ int main(const int argc, const char **argv)
         exit(ERROR);
     }
 
-    if (argv[1])
-    {
-        
-    }
+    file = argv[1];
+    
     if (parser_retval == NO_FILE)
-    {
-        descr = pcap_open_live("eth0", 100, 0, 0, errbuf);
-        file = "eth0";
-    }
+        descr = pcap_open_live(file, 100, 0, 0, errbuf);
     else
-    {
-        descr = pcap_open_offline(argv[1], errbuf);
-        file = argv[1];
-    }
+        descr = pcap_open_offline(file, errbuf);
 
     if (descr == NULL)
     {

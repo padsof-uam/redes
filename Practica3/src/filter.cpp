@@ -47,10 +47,10 @@ short arg_parser(const int argc, const char **argv, filter_params *args)
     args->port_src = -1;
 
     if (argc == 1 || (argc >= 2 && argv[1][0] == '-'))
-    {
-        i = 1;
+        return ERROR;
+
+    if(strstr(argv[1], "eth") == argv[1])
         retval = NO_FILE;
-    }
 
     for (; i < argc && retval != ERROR; i += 2)
     {
