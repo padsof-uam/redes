@@ -1,6 +1,9 @@
-#define __STDC_FORMAT_MACROS 1
 #ifndef FILTER_H
 #define FILTER_H
+
+#ifndef __STDC_FORMAT_MACROS
+#define __STDC_FORMAT_MACROS 1
+#endif
 
 #include <cstdio>
 #include <stdlib.h>

@@ -193,11 +193,11 @@ int Stats::print_stats()
     double throughput = total_size / duration;
 
     printf("Estadísticas:\n");
-    printf("\tDuración: %.3lf segundos\n", duration);
-    printf("\tCapturados: %d (%.2lf paquetes/s)\n", total_packets, packs_per_sec);
-    printf("\tDescartados: %d (%.2lf %%)\n", total_packets - accepted_packets, 100 - filtered_percentage);
-    printf("\tAceptados: %d (%.2lf %%)\n", accepted_packets, filtered_percentage);
-    printf("\tThroughput: %.2lf Bps\n", throughput);
+    printf("\tDuración: %.3f segundos\n", duration);
+    printf("\tCapturados: %d (%.2f paquetes/s)\n", total_packets, packs_per_sec);
+    printf("\tDescartados: %d (%.2f %%)\n", total_packets - accepted_packets, 100 - filtered_percentage);
+    printf("\tAceptados: %d (%.2f %%)\n", accepted_packets, filtered_percentage);
+    printf("\tThroughput: %.2f Bps\n", throughput);
     printf("\n");
     printf("\tPaquetes no IP:\t %d (%.2f %%)\n", noip, 100 * (double) noip / total_packets);
     printf("\tPaquetes IP:\t %d (%.2f %%)\n", ip, 100 * (double) ip / total_packets);

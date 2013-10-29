@@ -6,7 +6,7 @@ void ip_tostr(uint32_t ip, char *ipstr)
 
     memcpy(ip_array, &ip, sizeof(4));
 
-    sprintf(ipstr, "%" PRIu8 ".%" PRIu8 ".%" PRIu8 ".%" PRIu8,
+    sprintf(ipstr, "%d.%d.%d.%d",
             ip_array[3],
             ip_array[2],
             ip_array[1],
@@ -41,10 +41,10 @@ short arg_parser(const int argc, const char **argv, filter_params *args)
 
     args->has_eth_src = 0;
     args->has_eth_dst = 0;
-    args->ip_dst = -1;
-    args->ip_src = -1;
-    args->port_dst = -1;
-    args->port_src = -1;
+    args->ip_dst = 0;
+    args->ip_src = 0;
+    args->port_dst = 0;
+    args->port_src = 0;
 
     if (argc == 1 || (argc >= 2 && argv[1][0] == '-'))
         return ERROR;
@@ -54,13 +54,13 @@ short arg_parser(const int argc, const char **argv, filter_params *args)
 
     for (; i < argc && retval != ERROR; i += 2)
     {
-        if (args->ip_src == -1 && !strcmp(argv[i], "-ipo"))
+        if (!args->ip_src && !strcmp(argv[i], "-ipo"))
             args->ip_src = ip_fromstr(argv[i + 1]);
-        else if (args->ip_dst == -1 && !strcmp(argv[i], "-ipd"))
+        else if (!args->ip_dst && !strcmp(argv[i], "-ipd"))
             args->ip_dst = ip_fromstr(argv[i + 1]);
-        else if (args->port_src == -1 && !strcmp(argv[i], "-po"))
+        else if (!args->port_src && !strcmp(argv[i], "-po"))
             args->port_src = atoi(argv[i + 1]);
-        else if (args->port_dst == -1 && !strcmp(argv[i], "-pd"))
+        else if (!args->port_dst && !strcmp(argv[i], "-pd"))
             args->port_dst = atoi(argv[i + 1]);
         else if (!args->has_eth_src && !strcmp(argv[i], "-etho"))
         {
@@ -83,7 +83,7 @@ short arg_parser(const int argc, const char **argv, filter_params *args)
  * Macro to reject a packet based on a parameter
  * @param  what Valor a parameters.
  */
-#define CHECKFOR(what) if(what != -1 && p_##what != what) return 1;
+#define CHECKFOR(what) if(what != 0 && p_##what != what) return 1;
 
 static int eth_equal(uint32_t *eth_a, uint8_t *eth_b)
 {
