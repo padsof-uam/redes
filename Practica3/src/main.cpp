@@ -90,7 +90,7 @@ int main(const int argc, const char **argv)
             fprintf(stderr, "Error al analizar el paquete %d; %s %d.\n", cont, __FILE__, __LINE__);
             exit(retorno);
         }
-        
+
         stats.mark_arrival(fparams.port_dst, fparams.port_src);
         stats.parse_packet(paquete, cabecera, retorno);
     }

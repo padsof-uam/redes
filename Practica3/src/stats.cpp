@@ -4,13 +4,13 @@
 #include <utility>
 #include <errno.h>
 
-static long get_ms_time()
+static long get_us_time()
 {
     struct timeval tval;
 
     gettimeofday(&tval, NULL);
 
-    return tval.tv_sec * 1000 + tval.tv_usec / 1000;
+    return tval.tv_sec * 1000 * 1000 + tval.tv_usec;
 }
 
 Stats::Stats()
@@ -202,21 +202,21 @@ void Stats::stats_for(std::map<uint32_t, endpoint_data> &map, int print_ip)
 int Stats::print_stats()
 {
     double filtered_percentage = 100 * (double) accepted_packets / total_packets;
-    double duration = (double)(timeend - timestart) / 1000;
+    double duration = (double)(timeend - timestart) / 1000000;
     double packs_per_sec = total_packets / duration;
     double throughput = total_size / duration;
 
     printf("Estadísticas:\n");
-    printf("\tDuración: %.3f segundos\n", duration);
-    printf("\tCapturados: %d (%.2f paquetes/s)\n", total_packets, packs_per_sec);
-    printf("\tDescartados: %d (%.2f %%)\n", total_packets - accepted_packets, 100 - filtered_percentage);
-    printf("\tAceptados: %d (%.2f %%)\n", accepted_packets, filtered_percentage);
-    printf("\tThroughput: %.2f Bps\n", throughput);
+    printf("\tDuración:\t %.3f segundos\n", duration);
+    printf("\tCapturados:\t %d (%.2f paquetes/s)\n", total_packets, packs_per_sec);
+    printf("\tDescartados:\t %d (%.2f %%)\n", total_packets - accepted_packets, 100 - filtered_percentage);
+    printf("\tAceptados:\t %d (%.2f %%)\n", accepted_packets, filtered_percentage);
+    printf("\tThroughput:\t %.2f Bps\n", throughput);
     printf("\n");
-    printf("\tPaquetes no IP:\t %d (%.2f %%)\n", noip, 100 * (double) noip / total_packets);
-    printf("\tPaquetes IP:\t %d (%.2f %%)\n", ip, 100 * (double) ip / total_packets);
-    printf("\tPaquetes TCP:\t %d (%.2f %%)\n", tcp, 100 * (double) tcp / total_packets);
-    printf("\tPaquetes UDP:\t %d (%.2f %%)\n", udp, 100 * (double) udp / total_packets);
+    printf("\tPaquetes no IP:\t\t %d (%.2f %%)\n", noip, 100 * (double) noip / total_packets);
+    printf("\tPaquetes IP:\t\t %d (%.2f %%)\n", ip, 100 * (double) ip / total_packets);
+    printf("\tPaquetes TCP:\t\t %d (%.2f %%)\n", tcp, 100 * (double) tcp / total_packets);
+    printf("\tPaquetes UDP:\t\t %d (%.2f %%)\n", udp, 100 * (double) udp / total_packets);
     printf("\tPaquetes no TCP/UDP:\t %d (%.2f %%)\n", notcpudp, 100 * (double) notcpudp / total_packets);
     printf("\n");
 
@@ -231,13 +231,13 @@ int Stats::print_stats()
 
 void Stats::start()
 {
-    timestart = get_ms_time();
+    timestart = get_us_time();
     last_time_received = timestart;
 }
 
 void Stats::stop()
 {
-    timeend = get_ms_time();
+    timeend = get_us_time();
 }
 
 void Stats::mark_arrival(const int port_dst, const int port_src)
@@ -247,7 +247,7 @@ void Stats::mark_arrival(const int port_dst, const int port_src)
     if (port_dst == -1 || port_src == -1)
         return;
 
-    current = get_ms_time();
+    current = get_us_time();
 
     if(arrival_times)
         fprintf(arrival_times, "%ld\n", current - last_time_received);

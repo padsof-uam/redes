@@ -16,6 +16,8 @@
 #include <stdarg.h>
 #include "packet_parser.h"
 
+#define QUIET 1
+
 typedef struct 
 {
     uint32_t ip_src;

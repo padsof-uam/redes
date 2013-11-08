@@ -195,6 +195,9 @@ int analizarPaquete(u_int8_t *paquete, struct pcap_pkthdr *cabecera, filter_para
     if (filtered != 0)
         return 0;
 
+    if(QUIET)
+        return 1;
+
     printf("Paquete n. %d \n", cont);
 
     print_packet_field(paquete, "MAC destino", 0, 0, 8, ETH_ALEN, HEX);
