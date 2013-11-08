@@ -244,7 +244,7 @@ void Stats::mark_arrival(const int port_dst, const int port_src)
 {
     long current;
 
-    if (port_dst == -1 || port_src == -1)
+    if (port_dst == 0 || port_src == 0)
         return;
 
     current = get_us_time();
