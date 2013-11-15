@@ -9,13 +9,11 @@
  */
 static int _extract(const uint8_t *packet, int bit_start, struct packet_val *value)
 {
-    int bytes_per_value;
     uint8_t uint8val;
     int bit_block_size = value->size;
     int size_shift, position_shift;
     int i, byte_start;
 
-    bytes_per_value = TOBYTESIZE(bit_block_size);
     size_shift = bit_block_size < 8 ? 8 - bit_block_size : 0;
 
     for (i = 0; i < value->num_values; i++)
