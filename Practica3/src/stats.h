@@ -26,7 +26,7 @@ struct paircomp
 {
     bool operator()(const port_pair &a, const port_pair &b) const
     {
-        return (a.p_dst << 2 + a.p_src) < (b.p_dst << 2 + b.p_src);
+        return ((a.p_dst << 2) + a.p_src) < ((b.p_dst << 2) + b.p_src);
     }
 };
 

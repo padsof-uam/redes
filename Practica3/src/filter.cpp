@@ -1,4 +1,7 @@
 #include "filter.h"
+#include <assert.h>
+
+#define QUIET 1
 
 void ip_tostr(uint32_t ip, char *ipstr)
 {
@@ -49,7 +52,7 @@ short arg_parser(const int argc, const char **argv, filter_params *args)
     if (argc == 1 || (argc >= 2 && argv[1][0] == '-'))
         return ERROR;
 
-    if(strstr(argv[1], "eth") == argv[1])
+    if (strstr(argv[1], "eth") == argv[1])
         retval = NO_FILE;
 
     for (; i < argc && retval != ERROR; i += 2)
@@ -103,6 +106,7 @@ short filter(u_int8_t *packet, uint32_t eth_type, filter_params *args)
     uint32_t p_eth_src[6], p_eth_dst[6];
     uint32_t ip_dst, ip_src, port_dst, port_src;
     uint32_t ip_header_size;
+    int vlan_offset = 0;
 
     ip_dst = args->ip_dst;
     ip_src = args->ip_src;
@@ -118,17 +122,22 @@ short filter(u_int8_t *packet, uint32_t eth_type, filter_params *args)
     if (args->has_eth_src && !eth_equal(p_eth_dst, args->eth_src))
         return 1;
 
+    if (p_eth_type == 0x8100)
+    {
+        extract(packet, ETH_ALEN * 2 + 4, 1, 16, &p_eth_type);
+        vlan_offset = 4;
+    }
 
     CHECKFOR(eth_type);
 
-    packet += ETH_ALEN * 2 + ETH_TLEN; // ETH header end.
+    packet += ETH_ALEN * 2 + ETH_TLEN + vlan_offset; // ETH header end.
 
     extract_offset(packet, 0, 4, 1, 4, &ip_header_size);
 
     extract(packet, 9, 1, 8, &p_protocol);
     extract(packet, 12, 1, 32, &p_ip_src);
     extract(packet, 16, 1, 32, &p_ip_dst);
-
+    
     if (p_protocol != UDP && p_protocol != TCP)
         return 1;
 
@@ -186,26 +195,38 @@ static const char *proto_informer(const uint32_t *values)
 
 int analizarPaquete(u_int8_t *paquete, struct pcap_pkthdr *cabecera, filter_params *args, int cont)
 {
-    uint32_t ip_header_size;
+    uint32_t ip_header_size, p_eth_type;
     uint32_t protocol;
     int filtered;
+    int vlan_offset = 0;
 
     filtered = filter(paquete, 0x0800, args);
 
     if (filtered != 0)
         return 0;
 
-    if(QUIET)
+    if (QUIET)
         return 1;
 
     printf("Paquete n. %d \n", cont);
 
     print_packet_field(paquete, "MAC destino", 0, 0, 8, ETH_ALEN, HEX);
     print_packet_field(paquete, "MAC origen", ETH_ALEN, 0, 8, ETH_ALEN, HEX);
-    print_packet_field(paquete, "Tipo ETH", ETH_ALEN * 2, 0, 16, 1, HEX);
+
+    extract(paquete, ETH_ALEN * 2, 1, 16, &p_eth_type);
+
+    if (p_eth_type == 0x8100)
+    {
+        print_packet_field(paquete, "Tipo ETH", ETH_ALEN * 2 + 4, 0, 16, 1, HEX);
+        vlan_offset = 4;
+    }
+    else
+    {
+        print_packet_field(paquete, "Tipo ETH", ETH_ALEN * 2, 0, 16, 1, HEX);
+    }
 
     // ETH end.
-    paquete += ETH_ALEN * 2 + ETH_TLEN;
+    paquete += ETH_ALEN * 2 + ETH_TLEN + vlan_offset;
 
     // IP Start.
     print_packet_field(paquete, "Versión IP", 0, 0, 4, 1, DEC);

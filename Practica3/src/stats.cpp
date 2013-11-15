@@ -5,14 +5,6 @@
 #include <errno.h>
 #include <time.h>
 
-static long get_us_time()
-{
-    struct timeval tval;
-
-    gettimeofday(&tval, NULL);
-
-    return tval.tv_sec * 1000 * 1000 + tval.tv_usec;
-}
 
 Stats::Stats(filter_params *params)
 {
@@ -65,7 +57,7 @@ endpoint_data &Stats::get_or_create(map<uint32_t, endpoint_data> &map, uint32_t 
     return map[key];
 }
 
-long Stats::_get_ms_time(const struct timeval &ts)
+static long _get_ms_time(const struct timeval &ts)
 {
     return ts.tv_sec * 1000 + (double) ts.tv_usec / 1000;
 }
@@ -102,6 +94,7 @@ int Stats::parse_packet(const uint8_t *packet, const struct pcap_pkthdr *header,
     uint32_t ip_header_size;
     double packet_time;
     double previous_packet_time = last_packet_time;
+    int vlan_offset = 0;
 
     total_packets++;
     accepted_packets += accepted;
@@ -121,7 +114,13 @@ int Stats::parse_packet(const uint8_t *packet, const struct pcap_pkthdr *header,
 
     extract(packet, ETH_ALEN * 2, 1, 16, &p_eth_type);
 
-    packet += ETH_ALEN * 2 + ETH_TLEN; // ETH header end.
+    if(p_eth_type == 0x8100)
+    {
+        extract(packet, ETH_ALEN * 2 + 4, 1, 16, &p_eth_type);
+        vlan_offset = 4;
+    }
+
+    packet += ETH_ALEN * 2 + ETH_TLEN + vlan_offset; // ETH header end.
 
     if (p_eth_type != ETH_TYPE_IP)
     {
