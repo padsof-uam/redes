@@ -240,14 +240,14 @@ void Stats::stop()
     timeend = get_us_time();
 }
 
-void Stats::mark_arrival(const int port_dst, const int port_src)
+void Stats::mark_arrival(const int port_dst, const int port_src, const pcap_pkthdr * header)
 {
     long current;
 
     if (port_dst == 0 || port_src == 0)
         return;
 
-    current = get_us_time();
+    current = header->ts.tv_sec * 1000 * 1000 + header->ts.tv_usec;
 
     if(arrival_times)
         fprintf(arrival_times, "%ld\n", current - last_time_received);

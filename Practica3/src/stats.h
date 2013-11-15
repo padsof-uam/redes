@@ -39,5 +39,5 @@ public:
 	void stop();
 	int parse_packet(const uint8_t* packet, const struct pcap_pkthdr* header, short accepted);
 	int print_stats();
-	void mark_arrival(const int port_dst, const int port_src);
+	void mark_arrival(const int port_dst, const int port_src, const pcap_pkthdr* header);
 };

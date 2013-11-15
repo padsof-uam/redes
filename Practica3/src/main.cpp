@@ -91,7 +91,7 @@ int main(const int argc, const char **argv)
             exit(retorno);
         }
 
-        stats.mark_arrival(fparams.port_dst, fparams.port_src);
+        stats.mark_arrival(fparams.port_dst, fparams.port_src,cabecera);
         stats.parse_packet(paquete, cabecera, retorno);
     }
     stats.stop();
