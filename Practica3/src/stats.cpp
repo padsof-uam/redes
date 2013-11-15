@@ -62,7 +62,7 @@ static double _get_ms_time(const struct timeval &ts)
     return (double) ts.tv_sec * 1000 + (double) ts.tv_usec / 1000;
 }
 
-void Stats::mark_port_arrival(const struct pcap_pkthdr *header, const int port_src, const int port_dst, const double prev_packet_time)
+void Stats::mark_port_arrival(const struct pcap_pkthdr *header, const uint16_t port_src, const uint16_t port_dst, const double prev_packet_time)
 {
     if (arrival_times && is_filtering_ports)
     {

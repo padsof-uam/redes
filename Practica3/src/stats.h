@@ -53,7 +53,7 @@ private:
     endpoint_data &get_or_create(map<uint32_t, endpoint_data> &map, uint32_t key);
     void print_top_five(std::map<uint32_t, endpoint_data> &map, selector sel, const char *title, int print_ip);
     void stats_for(std::map<uint32_t, endpoint_data> &map, int print_ip);
-    void mark_port_arrival(const struct pcap_pkthdr *header, const int port_src, const int port_dst, const double prev_packet_time);
+    void mark_port_arrival(const struct pcap_pkthdr *header, const uint16_t port_src, const uint16_t port_dst, const double prev_packet_time);
     long get_ms_time(const struct timeval &ts);
     void process_port_arrivals(double duration);
 public:
