@@ -3,6 +3,7 @@
 #include <list>
 #include <utility>
 #include <errno.h>
+#include <time.h>
 
 static long get_us_time()
 {
@@ -13,7 +14,7 @@ static long get_us_time()
     return tval.tv_sec * 1000 * 1000 + tval.tv_usec;
 }
 
-Stats::Stats()
+Stats::Stats(filter_params *params)
 {
     ip = 0;
     noip = 0;
@@ -25,6 +26,11 @@ Stats::Stats()
     total_size = 0;
     arrival_times = NULL;
     f_sizes = NULL;
+    fparams = params;
+    first_packet_time = -1;
+    last_packet_time = 0;
+
+    is_filtering_ports = params->port_dst != 0 && params->port_src != 0;
 
     arrival_times = fopen(ARRIVAL_TIMES_FILE, "w");
     f_sizes = fopen(SIZES_FILE, "w");
@@ -59,10 +65,43 @@ endpoint_data &Stats::get_or_create(map<uint32_t, endpoint_data> &map, uint32_t 
     return map[key];
 }
 
+long Stats::_get_ms_time(const struct timeval &ts)
+{
+    return ts.tv_sec * 1000 + (double) ts.tv_usec / 1000;
+}
+
+void Stats::mark_port_arrival(const struct pcap_pkthdr *header, const int port_src, const int port_dst, const long prev_packet_time)
+{
+    if (arrival_times && is_filtering_ports)
+    {
+        long arrival_time;
+
+        if(prev_packet_time == 0)
+            arrival_time = 0;
+        else
+            arrival_time = _get_ms_time(header->ts) - prev_packet_time;
+
+        fprintf(arrival_times, "%ld\n", arrival_time);
+    }
+    else
+    {
+        map<port_pair, double>::iterator iter;
+        port_pair pair = { port_src, port_dst };
+        iter = port_arrivals.find(pair);
+
+        if(iter == port_arrivals.end())
+            port_arrivals[pair] = header->len;
+        else
+            iter->second += header->len;
+    }
+}
+
 int Stats::parse_packet(const uint8_t *packet, const struct pcap_pkthdr *header, short accepted)
 {
     uint32_t p_eth_type, p_protocol, p_ip_dst, p_ip_src, p_port_dst, p_port_src;
     uint32_t ip_header_size;
+    double packet_time;
+    double previous_packet_time = last_packet_time;
 
     total_packets++;
     accepted_packets += accepted;
@@ -70,8 +109,15 @@ int Stats::parse_packet(const uint8_t *packet, const struct pcap_pkthdr *header,
     if (accepted)
         total_size += header->len;
 
-    if(f_sizes)
+    if (f_sizes)
         fprintf(f_sizes, "%d\n", header->len);
+
+    packet_time = _get_ms_time(header->ts);
+
+    if(first_packet_time == -1)
+        first_packet_time = packet_time;
+
+    last_packet_time = packet_time;
 
     extract(packet, ETH_ALEN * 2, 1, 16, &p_eth_type);
 
@@ -129,6 +175,8 @@ int Stats::parse_packet(const uint8_t *packet, const struct pcap_pkthdr *header,
 
     port_dst_data.bytes_received += header->len;
     port_dst_data.packs_received++;
+
+    mark_port_arrival(header, p_port_src, p_port_dst, previous_packet_time);
 
     return 0;
 }
@@ -202,12 +250,12 @@ void Stats::stats_for(std::map<uint32_t, endpoint_data> &map, int print_ip)
 int Stats::print_stats()
 {
     double filtered_percentage = 100 * (double) accepted_packets / total_packets;
-    double duration = (double)(timeend - timestart) / 1000000;
+    double duration = (double)(last_packet_time - first_packet_time) / 1000;
     double packs_per_sec = total_packets / duration;
     double throughput = total_size / duration;
 
     printf("Estadísticas:\n");
-    printf("\tDuración:\t %.3f segundos\n", duration);
+    printf("\tDuración:\t %.3f s\n", duration);
     printf("\tCapturados:\t %d (%.2f paquetes/s)\n", total_packets, packs_per_sec);
     printf("\tDescartados:\t %d (%.2f %%)\n", total_packets - accepted_packets, 100 - filtered_percentage);
     printf("\tAceptados:\t %d (%.2f %%)\n", accepted_packets, filtered_percentage);
@@ -226,31 +274,19 @@ int Stats::print_stats()
     printf("===== Top 5 puertos =====\n");
     stats_for(port_map, 0);
 
+    if(!is_filtering_ports)
+        process_port_arrivals(duration);
+
     return 0;
 }
 
-void Stats::start()
+void Stats::process_port_arrivals(double duration)
 {
-    timestart = get_us_time();
-    last_time_received = timestart;
-}
-
-void Stats::stop()
-{
-    timeend = get_us_time();
-}
-
-void Stats::mark_arrival(const int port_dst, const int port_src, const pcap_pkthdr * header)
-{
-    long current;
-
-    if (port_dst == 0 || port_src == 0)
+    if(!arrival_times)
         return;
 
-    current = header->ts.tv_sec * 1000 * 1000 + header->ts.tv_usec;
+    map<port_pair, double>::iterator iter;
 
-    if(arrival_times)
-        fprintf(arrival_times, "%ld\n", current - last_time_received);
-
-    last_time_received = current;
+    for(iter = port_arrivals.begin(); iter != port_arrivals.end(); iter++)
+        fprintf(arrival_times, "%d-%d\t %.5f\n", iter->first.p_src, iter->first.p_dst, iter->second / duration);
 }

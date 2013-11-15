@@ -44,8 +44,7 @@ int main(const int argc, const char **argv)
     int capture_retval;
     int retval = OK;
     filter_params fparams;
-    const char *file;
-    Stats stats;
+    const char *file;;
     int cont = 0;
 
     short parser_retval = arg_parser(argc, argv, &fparams);
@@ -62,6 +61,8 @@ int main(const int argc, const char **argv)
         exit(ERROR);
     }
 
+    Stats stats(&fparams);
+
     file = argv[1];
     
     if (parser_retval == NO_FILE)
@@ -77,7 +78,6 @@ int main(const int argc, const char **argv)
 
     printf("Leyendo paquetes en %s...\n", file);
 
-    stats.start();
     while (ctrl_pressed == 0 && (capture_retval = pcap_next_ex(descr, &cabecera, (const u_char **) (&paquete))) == 1)
     {
         if(ctrl_pressed)
@@ -91,10 +91,8 @@ int main(const int argc, const char **argv)
             exit(retorno);
         }
 
-        stats.mark_arrival(fparams.port_dst, fparams.port_src,cabecera);
         stats.parse_packet(paquete, cabecera, retorno);
     }
-    stats.stop();
 
     if (capture_retval == -1)
     {
@@ -113,4 +111,3 @@ int main(const int argc, const char **argv)
 
     return retval;
 }
-
