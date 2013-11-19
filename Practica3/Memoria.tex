@@ -1,0 +1,49 @@
+\documentclass{apuntes}
+
+\usepackage{tikz}
+\usepackage{tikz-3dplot}
+\title{Memoria de la práctica 3}
+\author{Guillermo Julián y Víctor de Juan}
+\date{20/11/2013}
+\usetikzlibrary{arrows,calc,shapes}
+
+\begin{document}
+
+\pagestyle{plain}
+\maketitle
+\tableofcontents
+
+\chapter{Porcentajes de paquetes}
+
+
+Al analizar los porcentajes de paquetes descartados y de los paquetes que no son ni TCP ni UDP nos encontramos con la existencia de algunos paquetes que tenían de protocolo $0x8100$ en vez de $0x8060$ que sí eran UDP. Casualmente estos paquetes eran todos los que pensábamos que eran UDP. Tras corregir esto, las estadísticas (de la traza practica3\_rc1lab.pcap.) son:
+
+\easyimg{imgs/Stats.png}{Porcentajes de paquetes leidos}{lblStats}
+
+En donde el tiempo está sacado de las cabeceras de los paquetes, para hacer una estadística más real.
+
+\newpage
+\section{Top}
+
+\subsection{Top de IP's}
+
+A continuación mostramos las IP's más usadas separadas por origen (recibidos) o destino (enviados) y separadas también por bytes o paquetes.
+
+\easyimg{imgs/top5_IP.png}{Top de las 5 IP's más activas}{lblTop5IP}
+\newpage
+\subsection{Top de puertos}
+
+A continuación mostramos los puertos más usados separados por origen (recibidos) o destino (enviados) y separados también por bytes o paquetes.
+
+\easyimg{imgs/Top5_puertos.png}{Top de los 5 puertos más activos}{lblTop5Puertos}
+
+\chapter{Gr\'aficas}
+
+\section{ECDF de los tamaños de las trazas}
+
+\section{Caudal de nivel 2}
+
+\section{Tiempos de llegadas}
+
+
+\end{document}
