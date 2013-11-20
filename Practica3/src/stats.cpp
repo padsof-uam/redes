@@ -80,7 +80,7 @@ void Stats::mark_port_arrival(const struct pcap_pkthdr *header, const uint16_t p
             arrival_time = 0;
         else
             arrival_time = _get_ms_time(header->ts) - prev_packet_time;
-             
+
         fprintf(arrival_times, "%f\n", arrival_time);
     }
     else
@@ -169,7 +169,6 @@ int Stats::parse_packet(const uint8_t *packet, const struct pcap_pkthdr *header,
 }
 void Stats::save_throughput_per_sec(int packet_time_sec, int len)
 {
-    printf("Packet len %d arrived at second %d\n", len, packet_time_sec);
     while (packet_time_sec > last_tps_second)
     {
         fprintf(f_throughput, "%d\n", current_throughput);
