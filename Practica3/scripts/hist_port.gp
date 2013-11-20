@@ -9,8 +9,8 @@ set style fill solid 0.5
 xmax=system("sort -nk 1 arrivals | tail -n 2 | awk '{print $1}' | head -n 1")
 set xrange [0:xmax]
 
-
-bin_width = xmax/40
+Column_number = 40
+bin_width = xmax/Column_number
 
 rounded(x) = bin_width * ( bin_number(x) + 0.5 )
 bin_number(x) = floor(x/bin_width)
