@@ -1,5 +1,5 @@
 GCC = g++
-CPPFLAGS = -ggdb -Wall -pedantic -std=c++98 -fno-omit-frame-pointer -fsanitize=address -O1 -fsanitize-undefined-trap-on-error
+CPPFLAGS = -ggdb -Wall -pedantic -std=c++98
 LIBS = -lpcap
 TARGET = main
 
