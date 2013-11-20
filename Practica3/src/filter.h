@@ -69,4 +69,6 @@ int analizarPaquete(u_int8_t *paquete, struct pcap_pkthdr *cabecera, filter_para
  */
 short filter(u_int8_t* packet, uint32_t eth_type,filter_params* args);
 
+void correct_for_vlan(const uint8_t* packet, uint32_t* eth_type, int* vlan_offset);
+
 #endif

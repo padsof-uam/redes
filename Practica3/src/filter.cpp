@@ -122,11 +122,7 @@ short filter(u_int8_t *packet, uint32_t eth_type, filter_params *args)
     if (args->has_eth_src && !eth_equal(p_eth_dst, args->eth_src))
         return 1;
 
-    if (p_eth_type == 0x8100)
-    {
-        extract(packet, ETH_ALEN * 2 + 4, 1, 16, &p_eth_type);
-        vlan_offset = 4;
-    }
+    correct_for_vlan(packet, &p_eth_type, &vlan_offset);
 
     CHECKFOR(eth_type);
 
@@ -215,15 +211,8 @@ int analizarPaquete(u_int8_t *paquete, struct pcap_pkthdr *cabecera, filter_para
 
     extract(paquete, ETH_ALEN * 2, 1, 16, &p_eth_type);
 
-    if (p_eth_type == 0x8100)
-    {
-        print_packet_field(paquete, "Tipo ETH", ETH_ALEN * 2 + 4, 0, 16, 1, HEX);
-        vlan_offset = 4;
-    }
-    else
-    {
-        print_packet_field(paquete, "Tipo ETH", ETH_ALEN * 2, 0, 16, 1, HEX);
-    }
+    correct_for_vlan(paquete, &p_eth_type, &vlan_offset);
+    print_packet_field(paquete, "Tipo ETH", ETH_ALEN * 2 + vlan_offset, 0, 16, 1, HEX);
 
     // ETH end.
     paquete += ETH_ALEN * 2 + ETH_TLEN + vlan_offset;
@@ -254,6 +243,19 @@ int analizarPaquete(u_int8_t *paquete, struct pcap_pkthdr *cabecera, filter_para
     printf("\n");
 
     return 1;
+}
+
+void correct_for_vlan(const uint8_t* packet, uint32_t* eth_type, int* vlan_offset)
+{
+    if (*eth_type == 0x8100)
+    {
+        extract(packet, ETH_ALEN * 2 + 4, 1, 16, eth_type);
+        *vlan_offset = 4;
+    }
+    else
+    {
+        *vlan_offset = 0;
+    }
 }
 
 

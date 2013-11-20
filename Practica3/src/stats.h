@@ -1,12 +1,14 @@
 #include <map>
+#include <list>
 #include <cstdio>
 #include "packet_parser.h"
 #include "filter.h"
 
 using namespace std;
 
-#define ARRIVAL_TIMES_FILE "arrivals"
-#define SIZES_FILE "sizes"
+#define ARRIVAL_TIMES_FILE "arrivals.dat"
+#define SIZES_FILE "sizes.dat"
+#define THROUGHPUT_FILE "throughput.dat"
 
 typedef struct
 {
@@ -21,7 +23,7 @@ typedef struct
     uint16_t p_src;
     uint16_t p_dst;
 } port_pair;
-
+ 
 struct paircomp
 {
     bool operator()(const port_pair &a, const port_pair &b) const
@@ -38,11 +40,14 @@ private:
     int ip, noip, tcp, udp, notcpudp;
     map<uint32_t, endpoint_data> ip_map;
     map<uint32_t, endpoint_data> port_map;
+    int current_throughput;
+    int last_tps_second;
     map<port_pair, double, paircomp> port_arrivals;
     int total_size;
     int total_packets;
     long timestart, timeend;
     int accepted_packets;
+    FILE *f_throughput;
     FILE *arrival_times;
     FILE *f_sizes;
     filter_params *fparams;
@@ -56,6 +61,8 @@ private:
     void mark_port_arrival(const struct pcap_pkthdr *header, const uint16_t port_src, const uint16_t port_dst, const double prev_packet_time);
     long get_ms_time(const struct timeval &ts);
     void process_port_arrivals(double duration);
+    void save_throughput_per_sec(int packet_time_sec, int len);
+    void save_sentreceived_data(int len, uint32_t port_src, uint32_t port_dst, uint32_t ip_src, uint32_t ip_dst);
 public:
     Stats(filter_params *params);
     ~Stats();

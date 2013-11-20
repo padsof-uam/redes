@@ -21,16 +21,21 @@ Stats::Stats(filter_params *params)
     fparams = params;
     first_packet_time = -1;
     last_packet_time = 0;
+    last_tps_second = 0;
+    current_throughput = 0;
 
     is_filtering_ports = params->port_dst != 0 && params->port_src != 0;
 
     arrival_times = fopen(ARRIVAL_TIMES_FILE, "w");
     f_sizes = fopen(SIZES_FILE, "w");
+    f_throughput = fopen(THROUGHPUT_FILE, "w");
 
     if (!f_sizes)
         fprintf(stderr, "Error: fopen: %s. File: %s, %s %d.\n", strerror(errno), SIZES_FILE, __FILE__, __LINE__);
     if (!arrival_times)
         fprintf(stderr, "Error: fopen: %s. File: %s, %s %d.\n", strerror(errno), ARRIVAL_TIMES_FILE, __FILE__, __LINE__);
+    if (!f_throughput)
+        fprintf(stderr, "Error: fopen: %s. File: %s, %s %d.\n", strerror(errno), THROUGHPUT_FILE, __FILE__, __LINE__);
 }
 
 Stats::~Stats()
@@ -40,6 +45,9 @@ Stats::~Stats()
 
     if (f_sizes)
         fclose(f_sizes);
+
+    if(f_throughput)
+        fclose(f_throughput);
 }
 
 endpoint_data &Stats::get_or_create(map<uint32_t, endpoint_data> &map, uint32_t key)
@@ -72,7 +80,7 @@ void Stats::mark_port_arrival(const struct pcap_pkthdr *header, const uint16_t p
             arrival_time = 0;
         else
             arrival_time = _get_ms_time(header->ts) - prev_packet_time;
-
+             
         fprintf(arrival_times, "%f\n", arrival_time);
     }
     else
@@ -107,20 +115,15 @@ int Stats::parse_packet(const uint8_t *packet, const struct pcap_pkthdr *header,
 
     packet_time = _get_ms_time(header->ts);
 
-    if (first_packet_time == -1)
+    if (first_packet_time < 0)
         first_packet_time = packet_time;
 
     last_packet_time = packet_time;
 
+    save_throughput_per_sec((packet_time - first_packet_time) / 1000, header->len);
+
     extract(packet, ETH_ALEN * 2, 1, 16, &p_eth_type);
-
-    if (p_eth_type == 0x8100)
-    {
-        extract(packet, ETH_ALEN * 2 + 4, 1, 16, &p_eth_type);
-        vlan_offset = 4;
-    }
-
-    packet += ETH_ALEN * 2 + ETH_TLEN + vlan_offset; // ETH header end.
+    correct_for_vlan(packet, &p_eth_type, &vlan_offset);
 
     if (p_eth_type != ETH_TYPE_IP)
     {
@@ -128,23 +131,14 @@ int Stats::parse_packet(const uint8_t *packet, const struct pcap_pkthdr *header,
         return 0;
     }
 
+    packet += ETH_ALEN * 2 + ETH_TLEN + vlan_offset; // ETH header end.
+
     ip++;
 
     extract_offset(packet, 0, 4, 1, 4, &ip_header_size);
-
     extract(packet, 9, 1, 8, &p_protocol);
     extract(packet, 12, 1, 32, &p_ip_src);
     extract(packet, 16, 1, 32, &p_ip_dst);
-
-    endpoint_data &ip_src_data = get_or_create(ip_map, p_ip_src);
-
-    ip_src_data.bytes_sent += header->len;
-    ip_src_data.packs_sent++;
-
-    endpoint_data &ip_dst_data = get_or_create(ip_map, p_ip_dst);
-
-    ip_dst_data.bytes_received += header->len;
-    ip_dst_data.packs_received++;
 
     packet += ip_header_size * 4; // IP header end.
 
@@ -159,26 +153,57 @@ int Stats::parse_packet(const uint8_t *packet, const struct pcap_pkthdr *header,
     else
     {
         notcpudp++;
+        save_sentreceived_data(header->len, 0, 0, p_ip_src, p_ip_dst);
         return 0;
     }
 
     extract(packet, 0, 1, 16, &p_port_src);
     extract(packet, 2, 1, 16, &p_port_dst);
 
-    endpoint_data &port_src_data = get_or_create(port_map, p_port_src);
-
-    port_src_data.bytes_sent += header->len;
-    port_src_data.packs_sent++;
-
-    endpoint_data &port_dst_data = get_or_create(port_map, p_port_dst);
-
-    port_dst_data.bytes_received += header->len;
-    port_dst_data.packs_received++;
+    save_sentreceived_data(header->len, p_port_src, p_port_dst, p_ip_src, p_ip_dst);
 
     if (accepted)
         mark_port_arrival(header, p_port_src, p_port_dst, previous_packet_time);
 
     return 0;
+}
+void Stats::save_throughput_per_sec(int packet_time_sec, int len)
+{
+    printf("Packet len %d arrived at second %d\n", len, packet_time_sec);
+    while (packet_time_sec > last_tps_second)
+    {
+        fprintf(f_throughput, "%d\n", current_throughput);
+        current_throughput = 0;
+        last_tps_second++;
+    }
+
+    current_throughput += len;
+}
+
+void Stats::save_sentreceived_data(int len, uint32_t port_src, uint32_t port_dst, uint32_t ip_src, uint32_t ip_dst)
+{
+    endpoint_data &ip_src_data = get_or_create(ip_map, ip_src);
+
+    ip_src_data.bytes_sent += len;
+    ip_src_data.packs_sent++;
+
+    endpoint_data &ip_dst_data = get_or_create(ip_map, ip_dst);
+
+    ip_dst_data.bytes_received += len;
+    ip_dst_data.packs_received++;
+
+    if (port_src != 0 && port_dst != 0)
+    {
+        endpoint_data &port_src_data = get_or_create(port_map, port_src);
+
+        port_src_data.bytes_sent += len;
+        port_src_data.packs_sent++;
+
+        endpoint_data &port_dst_data = get_or_create(port_map, port_dst);
+
+        port_dst_data.bytes_received += len;
+        port_dst_data.packs_received++;
+    }
 }
 
 bool compare_pair(std::pair<uint32_t, int> a, std::pair<uint32_t, int> b)
