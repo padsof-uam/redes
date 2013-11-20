@@ -1,0 +1,2 @@
+#!/bin/bash
+sort -nk 1 ../arrivals | tail -n 2 | awk '{print $1}' | head -n 1
