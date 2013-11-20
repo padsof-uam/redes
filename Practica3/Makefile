@@ -7,9 +7,11 @@ OBJDIR = obj
 SRCDIR = src
 BINDIR = bin
 
-OBJS := $(addprefix $(OBJDIR)/, $(patsubst %.cpp,%.o, $(wildcard $(SRCDIR)/*.cpp)))
+SRCS := $(wildcard $(SRCDIR)/*.cpp)
+OBJS := $(addprefix $(OBJDIR)/, $(patsubst %.cpp,%.o, $(SRCS)))
 
-.PRECIOUS: %.o 
+
+.PRECIOUS: %.o %.d
 .PHONY: debug clean 
  
 debug: $(TARGET)
@@ -17,10 +19,20 @@ scan: clean
 	@scan-build make
 $(OBJS): | $(OBJDIR)
 
-$(TARGET): $(OBJDIR)/src/main.o $(OBJS) | $(BINDIR)
+depend: $(OBJDIR)/.deps
+
+$(OBJDIR)/.deps: $(SRCS) | $(OBJDIR)
+	@-rm -f $(OBJDIR)/.deps
+	@$(CC) $(CFLAGS) -MM $^ >> $(OBJDIR)/.deps;
+	@awk '{printf("$(OBJDIR)/$(SRCDIR)/%s\n", $$0)}' $@ > "$@.0"
+	@mv "$@.0" $@
+
+-include $(OBJDIR)/.deps
+
+$(TARGET): $(OBJDIR)/src/main.o $(OBJS) | $(BINDIR) depend
 	@echo Building final target: $@
 	@$(GCC) $(CPPFLAGS) -o $(BINDIR)/$@ $^ $(LIBS)
-$(OBJDIR)/%.o: %.cpp | $(OBJDIR)
+$(OBJDIR)/%.o: %.cpp | $(OBJDIR) depend
 	@echo "$< -> $@"
 	@$(GCC) $(CPPFLAGS) -c $< -o $@
 $(OBJDIR):
