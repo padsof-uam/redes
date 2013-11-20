@@ -2,3 +2,5 @@
 *.sublime-workspace
 */bin/*
 *.pcap
+*/obj
+*.dat
