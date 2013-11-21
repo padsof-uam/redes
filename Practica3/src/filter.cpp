@@ -21,24 +21,19 @@ short eth_fromstr(const char *ethstr, uint8_t *eth)
     char *dup = strdup(ethstr);
     char *tofree = dup;
     char *token;
-    int i,k;
+    char * aux;
+    int i;
     
-    for (i = 5; i >= 0; i--)
+    for (i = 0; i <= 5; ++i)
     {
         token = strsep(&dup, ":");
 
         if (token == NULL)
             return -1;
-
-        //Esta solución cuando pilla unas letras pone 0
-        eth[i]=atoi(token);
-        //Esta solución se carga los números...
-        /*sscanf(token, "%08X", &k);
-        eth[i]=k;
-        printf("potato: \t tqs %s; \tes: %d;\t%d\n", token,eth[i],k);*/
-
+        
+        eth[i]=strtol(token, &aux, 16);
+    
     }
-
 
     free(tofree);
     return 0;

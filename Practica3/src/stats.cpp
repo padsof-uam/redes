@@ -314,3 +314,7 @@ void Stats::process_port_arrivals(double duration)
     for (iter = port_arrivals.begin(); iter != port_arrivals.end(); iter++)
         fprintf(arrival_times, "%d-%d\t %.5f\n", iter->first.p_src, iter->first.p_dst, iter->second / duration);
 }
+
+int Stats::getAccepted_packets(){
+    return accepted_packets;
+}

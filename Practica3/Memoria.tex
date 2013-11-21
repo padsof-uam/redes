@@ -20,6 +20,9 @@ Otro problema fue al hacer el ejercicio 5, que pedían filtrar por unos puertos 
 
 Aparecían 0 paquetes entre estos puertos (todos eran descartados por no ser ni IP ni TCP ni UDP) El enunciado sugería utilizar Wireshark con la traza, y para Wireshark todos los paquetes entre esos puertos son IP y UDP. Dscubrimos que tenían una capa intermedia (\emph{vlan}) que eran 4 bytes que descuadraban todo. Con esto hemos tenido también un poco de problema porque un compañero nos comentaba que te había entendido que no había que tener en cuenta los vlan. A pesar de ello, nosotros hemos considerado que esos paquetes (a pesar del vlan) siguen siendo paquetes IP y UDP, que no tienen que ser filtrados.
 
+Una de las constantes que merece ser mencionada es \emph{QUIET}. Por defecto está como 1. Esta constante lo que evita es que se imprima la información de cada uno de los paquetes leídos. Si se cambia su valor a 0, el programa imprimiría toda la información de los paquetes leídos (la funcionalidad implementada en la práctica pasada)
+
+Hemos utilizado c++ para la realización de estructuras que nos permitieran almacenar fácilmente la información necesaria. Utilizamos varios maps, dependiendo del uso. Para el top de las ip utilizamos un map cuya clave es la IP y cuyo valor es una estructura que almacena los bytes y paquetes recibidos y enviados. Lo mismo con los puertos. Aprovechando que estamos en c++ ha sido más facil implementar la clase Stats para ir implementando funcionalidades.
 
 \section{Porcentajes de paquetes}
 
@@ -29,35 +32,49 @@ Tras corregir lo del vlan, las estadísticas (de la traza practica3\_rc1lab.pcap
 
 En donde el tiempo está sacado de las cabeceras de los paquetes, para hacer una estadística más real.
 
-No hay ningún paquete que no sea IP (si no hubiéramos tenido en cuenta el \emph{vlan}) todos esos paquetes habrían sido los no reconocidos como IP.
-\newpage
+No hay ningún paquete que no sea IP (si no hubiéramos tenido en cuenta el \emph{vlan} todos esos paquetes habrían sido los no reconocidos como IP).
+
 \subsection{Top}
 
 \subsubsection{Top de IP's}
 
-A continuación mostramos las IP's más usadas separadas por origen (recibidos) o destino (enviados) y separadas también por bytes o paquetes.
+A continuación mostramos las IP's más usadas separadas por origen (enviados) o destino (recibidos) y separadas también por bytes o paquetes.
 
 \easyimg{imgs/Memoria/top5_IP.png}{Top de las 5 IP's más activas}{lblTop5IP}
+
+Podemos destacar que la 4º IP por Bytes recibidos no se encuentra en el top de paquetes. Esto se debe a que los paquetes recibidos por la misma son los suficientemente grandes como para adelantar a la 5º en Bytes y 4º en paquetes. Lo mismo pasa con los paquetes y Bytes enviados, no coinciden las 5 IP's más activas, debido también a que el tamaño de los paquetes (tanto enviados como recibidos) no es fijo.
+
 \newpage
 \subsubsection{Top de puertos}
 
 A continuación mostramos los puertos más usados separados por origen (enviados) o destino (recibidos) y separados también por bytes o paquetes.
 
 \easyimg{imgs/Memoria/Top5_puertos.png}{Top de los 5 puertos más activos}{lblTop5Puertos}
-\newpage
+
+Aquí observamos lo mismo que en el top de IP's, no coinciden los puertos más activos por bytes que por paquetes tanto recibidos como enviados.
+
+
 \section{Gr\'aficas}
 
 \paragraph{Explicación de los scripts}
 
-En la carpeta scripts se encuentran los scripts generadores de las gráficas pertinentes. 
+En la carpeta scripts se encuentran los scripts generadores de las gráficas pertinentes, almacenadas en la carpeta imgs.
+
+El script hist\_arrivals.gp genera la gráfica de los tiempos de llegadas, guardada en imgs/arrivals.png.
+
+El script hist\_sizes.gp genera la gráfica de los tiempos de llegadas, guardada en imgs/sizes.png.
+
+El script hist\_caudal.gp genera la gráfica de los tiempos de llegadas, guardada en imgs/throughput.png.
+
+Es \emph{importante} ejecutar los scripts incluyendo el directorio 'scripts' en el path, es decir, un ejemplo de ejecución sería: \emph{gnuplot scripts/hist\_sizes.png}
 \begin{itemize}
 	\item \textbf{hist\_sizes.gp} Genera un histograma (en imgs/sizes.png) con cuantos paquetes hay en la traza de cada tamaño (el ancho del histograma es 1). 
 
 	Dicha información está almacenada en el fichero sizes.dat
+
+	Destaca que prácticamente sólo hay 3 tamaños de paquetes, de lo que cabe esperar que en torno a 1500 debe ser el tamaño máximo de los paquetes (debido a la fragmentación) y en torno a 40 debe ser el mínimo. El valor en torno a 200 podría ser una aplicación concreta que mande paquetes del mismo tamaño.
 	
-	\begin{center}
-	\includegraphics[width=0.8\textwidth]{imgs/Memoria/mem_sizes.png}
-	\end{center}
+	\easyimg{imgs/Memoria/mem_sizes.png}{Tamaños de los paquetes de la traza}{lblSizes}
 
 	\item \textbf{hist\_arrivals.gp} Genera un histograma (en imgs/arrivals.png) a partir del fichero arrivals.dat (que contiene los tiempos de llegadas entre cada paquete que pase el filtro). El ancho del histograma es de 0.05 segundos.
 
@@ -68,19 +85,23 @@ En la carpeta scripts se encuentran los scripts generadores de las gráficas per
 		\item destino:55865
 	\end{itemize}
 	y descartado los pocos paquetes que han tardado más de 1.5 segundos en llegar para ejemplificar mejor el histograma generado por este fichero.
-	\begin{center}
-	\includegraphics[width=0.8\textwidth]{imgs/Memoria/mem_arrivals_port.png}
-	\end{center}
+	
+	\easyimg{imgs/Memoria/mem_arrivals_port.png}{Tiempos de llegada de los paquetes}{lblPortArrival}
 \end{itemize}
 
+\newpage
+
 \section{Gr\'aficas pedidas}
+\subsection{Ejercicio 3}
+La gráfica generada con los tamaños de los paquetes es la usada para ejemplificar el uso del script (\ref{lblSizes}).
 \subsection{Ejercicio 4}
 
 El tiempo entre paquetes entre los puertos origen: 24704 y destino:27088 presenta el siguiente histograma (generado con el script hist\_arrivals.gp)
 
 	\begin{center}
-	\includegraphics[width=0.8\textwidth]{imgs/Memoria/mem_arrivals_5.png}
+	\includegraphics[width=0.7\textwidth]{imgs/Memoria/mem_arrivals_5.png}
 	\end{center}
+
 
 Lo cual sugiere que la comunicación entre estos equipos es muy constante ya que casi todos los paquetes se transmiten equiespaciados de tiempo (aunque no tiene mucho ancho de banda)
 
@@ -89,9 +110,9 @@ Lo cual sugiere que la comunicación entre estos equipos es muy constante ya que
 El caudal/throughput/tasa/ancho de banda tomando como dirección ethernet origen \\00:55:22:af:c6:37 presenta el siguiente histograma:
 
 \begin{center}
-	\includegraphics[width=0.8\textwidth]{imgs/Memoria/mem_caudal.png}
+	\includegraphics[width=0.7\textwidth]{imgs/Memoria/throughput.png}
 \end{center}
 
-Y podemos observar que en este caso, practicamente todos los paquetes se han transmitido en el primer segundo, consumiendo un gran ancho de banda.
+Vemos que el ancho de banda en el tercer segundo es mucho mayor que en el resto de segundos.
 
 \end{document}

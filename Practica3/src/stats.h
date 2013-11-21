@@ -64,6 +64,7 @@ private:
     void save_throughput_per_sec(int packet_time_sec, int len);
     void save_sentreceived_data(int len, uint32_t port_src, uint32_t port_dst, uint32_t ip_src, uint32_t ip_dst);
 public:
+    int getAccepted_packets();
     Stats(filter_params *params);
     ~Stats();
     int parse_packet(const uint8_t *packet, const struct pcap_pkthdr *header, short accepted);
