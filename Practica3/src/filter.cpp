@@ -21,8 +21,8 @@ short eth_fromstr(const char *ethstr, uint8_t *eth)
     char *dup = strdup(ethstr);
     char *tofree = dup;
     char *token;
-    int i;
-
+    int i,k;
+    
     for (i = 5; i >= 0; i--)
     {
         token = strsep(&dup, ":");
@@ -30,12 +30,20 @@ short eth_fromstr(const char *ethstr, uint8_t *eth)
         if (token == NULL)
             return -1;
 
-        eth[i] = atoi(token);
+        //Esta solución cuando pilla unas letras pone 0
+        eth[i]=atoi(token);
+        //Esta solución se carga los números...
+        /*sscanf(token, "%08X", &k);
+        eth[i]=k;
+        printf("potato: \t tqs %s; \tes: %d;\t%d\n", token,eth[i],k);*/
+
     }
+
 
     free(tofree);
     return 0;
 }
+
 
 short arg_parser(const int argc, const char **argv, filter_params *args)
 {
@@ -93,6 +101,7 @@ static int eth_equal(uint32_t *eth_a, uint8_t *eth_b)
     int i = 0;
     for (i = 0; i < 6; i++)
     {
+
         if (eth_a[i] != eth_b[i])
             return 0;
     }
