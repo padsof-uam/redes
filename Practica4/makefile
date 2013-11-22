@@ -1,63 +1,46 @@
-################################################################################
-# Makefile con auto-deteccion de dependencias: nunca querras usar otro
-# (de tipo .h; las de linkado hay que enumerarlas)
-# Ver http://www.cs.washington.edu/orgs/acm/tutorials/dev-in-unix/makefiles.html
-################################################################################
+GCC = g++
+CPPFLAGS = -ggdb -Wall -pedantic -std=c++98
+LIBS = -lpcap
+TARGET = main
 
-# banderas de compilacion (PUEDE SER UTIL CAMBIARLAS)
-CC = gcc
-#ifdef ENTREGA
-CFLAGS = -Wall -g -I .
-LDLIBS = -lm 
-#else
-CFLAGS = -Wall -g -I .
-#-DENTREGA
-LDLIBS = -lm -lpcap
-#endif
+OBJDIR = obj
+SRCDIR = src
+BINDIR = bin
 
-# fuentes a considerar (si no se cambia, todos los '.c' del directorio actual)
-SOURCES = $(shell ls -1 *.c* | xargs)
+SRCS := $(wildcard $(SRCDIR)/*.cpp)
+OBJS := $(addprefix $(OBJDIR)/, $(patsubst %.cpp,%.o, $(SRCS)))
 
-# busca los ejecutables (todos los .c con metodo tipo 'int main')
-EXEC_SOURCES = $(shell grep -l "^int main" $(SOURCES) | xargs)
 
-# fich. de dependencia (.d) y nombres de ejecutables (los anteriores, sin '.c')
-EXECS = $(shell echo $(EXEC_SOURCES) | sed -e 's:\.c[p]*::g')
-DEPS = $(shell echo $(SOURCES) | sed -e 's:\.c[p]*:\.d:g')
+.PRECIOUS: %.o %.d
+.PHONY: debug clean 
+ 
+debug: $(TARGET)
+scan: clean
+	@scan-build make
+$(OBJS): | $(OBJDIR)
 
-all:	practica4
+depend: $(OBJDIR)/.deps
 
-practica4:	practica4.o interface.o
+$(OBJDIR)/.deps: $(SRCS) | $(OBJDIR)
+	@-rm -f $(OBJDIR)/.deps
+	@$(CC) $(CFLAGS) -MM $^ >> $(OBJDIR)/.deps;
+	@awk '{printf("$(OBJDIR)/$(SRCDIR)/%s\n", $$0)}' $@ > "$@.0"
+	@mv "$@.0" $@
 
-# receta para hacer un .d (dependencias automaticas de tipo .h para tus .o)
-%.d : %.c
-	@set -e; $(CC) -MM $(CFLAGS) $< \
-	| sed 's/\($*\)\.o[ :]*/\1.o $@ : /g' > $@; \
-	[ -s $@ ] || rm -f $@
+-include $(OBJDIR)/.deps
 
-#incluye las dependencias generadas
--include $(DEPS)
-
-# receta para hacer un .o
-%.o :	%.c
-	@echo -n compilando objeto \'$<\'...
-	@$(CC) $(CFLAGS) $< -c
-	@echo [OK]
-
-# receta para hacer un ejecutable (suponiendo resto de dependencias OK)
-% :	%.o
-	@echo -n compilando ejecutable \'$@\'...
-	@$(CC) $(CFLAGS) $^ -o $@ $(LDLIBS)
-	@echo [OK]
-
-# limpieza
-clean:	
-	@rm -f $(wildcard *.o *.d core* *.P) $(EXECS)
-
-# ayuda (nunca viene mal)
-help:
-	@echo "Use: make <target> ..."
-	@echo "Valid targets:"
-	@$(MAKE) --print-data-base --question | sed -e "s:makefile::g" |\
-	awk '/^[^.%][-A-Za-z0-9_]*:/	\
-		{ print "   " substr($$1, 1, length($$1)-1) }'
+$(TARGET): $(OBJDIR)/src/main.o $(OBJS) | $(BINDIR) depend
+	@echo Building final target: $@
+	@$(GCC) $(CPPFLAGS) -o $(BINDIR)/$@ $^ $(LIBS)
+$(OBJDIR)/%.o: %.cpp | $(OBJDIR) depend
+	@echo "$< -> $@"
+	@$(GCC) $(CPPFLAGS) -c $< -o $@
+$(OBJDIR):
+	@echo Creating obj directories
+	@mkdir -p $(OBJDIR)
+	@mkdir -p $(OBJDIR)/$(SRCDIR)
+$(BINDIR):
+	@echo Creating bin directory
+	@mkdir $(BINDIR)
+clean: 
+	-rm -rf $(OBJDIR) $(BINDIR) $(TARGET) 
