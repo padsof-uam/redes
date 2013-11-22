@@ -24,8 +24,9 @@ Stats::Stats(filter_params *params)
     last_tps_second = 0;
     current_throughput = 0;
 
-    //is_filtering_ports = params->port_dst != 0 && params->port_src != 0;
-    is_filtering_ports=1;
+    // is_filtering_ports = params->port_dst != 0 && params->port_src != 0;
+    is_filtering_ports = 1; // Siempre guardamos tiempos de llegada
+
     arrival_times = fopen(ARRIVAL_TIMES_FILE, "w");
     f_sizes = fopen(SIZES_FILE, "w");
     f_throughput = fopen(THROUGHPUT_FILE, "w");
