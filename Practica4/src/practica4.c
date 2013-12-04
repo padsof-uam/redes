@@ -18,7 +18,7 @@ uint16_t ID=1;		//Identificador IP
 
 
 void handleSignal(int nsignal){
-	printf("Control C pulsado (%llu)\n", cont);
+	printf("Control C pulsado (\t%" PRIu64")\n", cont);
 	pcap_close(descr);
 	exit(OK);
 }
@@ -32,6 +32,8 @@ int main(int argc, char **argv){
 	uint16_t puerto_destino;
 	char data[IP_DATAGRAM_MAX];
 	uint16_t pila_protocolos[CADENAS];
+	struct pcap_pkthdr * header;
+
 
 		//Dos opciones: leer de stdin o de fichero, adicionalmente para pruebas si no se introduce argumento se considera que el mensaje es "Payload "
 	if(argc!=5 && argc!=4 ){
@@ -54,6 +56,7 @@ int main(int argc, char **argv){
 		sprintf(data,"%s","Payload ");
 		sprintf(fichero_pcap_destino,"%s%s","debugging",".pcap");
 	}
+
 	if(signal(SIGINT,handleSignal)==SIG_ERR){
 		printf("Error: Fallo al capturar la senal SIGINT.\n");
 		return ERROR;
@@ -88,9 +91,13 @@ int main(int argc, char **argv){
 		//Formamos y enviamos el trafico, debe enviarse un unico segmento por llamada a enviar() aunque luego se traduzca en mas de un datagrama
 		//Primero un paquete UDP
 		//Definimos la pila de protocolos que queremos seguir
-	pila_protocolos[0]=UDP_PROTO; pila_protocolos[1]=IP_PROTO; pila_protocolos[2]=ETH_PROTO;
+	pila_protocolos[0]=UDP_PROTO;
+	pila_protocolos[1]=IP_PROTO; 
+	pila_protocolos[2]=ETH_PROTO;
 		//Rellenamos los parametros necesario para enviar el paquete a su destinatario y proceso
-	Parametros parametros_udp; memcpy(parametros_udp.IP_destino,IP_destino_red,IP_ALEN); parametros_udp.puerto_destino=puerto_destino;
+	Parametros parametros_udp;
+	memcpy(parametros_udp.IP_destino,IP_destino_red,IP_ALEN);
+	parametros_udp.puerto_destino = puerto_destino;
 		//Enviamos
 	if(enviar((uint8_t*)data,pila_protocolos,strlen(data),&parametros_udp)==ERROR ){
 		printf("Error: enviar(): %s %s %d.\n",errbuf,__FILE__,__LINE__);
@@ -98,17 +105,24 @@ int main(int argc, char **argv){
 	}
 	else	cont++;
 
-	printf("Enviado mensaje %lld, almacenado en %s\n\n\n", cont,fichero_pcap_destino);
+	printf("Enviado mensaje \t%" PRIu64", almacenado en %s\n\n\n", cont,fichero_pcap_destino);
 
 		//Luego un paquete ICMP en concreto un ping
-	pila_protocolos[0]=ICMP_PROTO; pila_protocolos[1]=IP_PROTO; pila_protocolos[2]=0;
-	Parametros parametros_icmp; parametros_icmp.tipo=PING_TIPO; parametros_icmp.codigo=PING_CODE; memcpy(parametros_icmp.IP_destino,IP_destino_red,IP_ALEN);
-	if(enviar((uint8_t*)"Probando a hacer un ping",pila_protocolos,strlen("Probando a hacer un ping"),&parametros_icmp)==ERROR ){
+	pila_protocolos[0]=ICMP_PROTO;
+	pila_protocolos[1]=IP_PROTO;
+	pila_protocolos[2]=0;
+
+	Parametros parametros_icmp;
+	parametros_icmp.tipo=PING_TIPO;
+	parametros_icmp.codigo=PING_CODE;
+	memcpy(parametros_icmp.IP_destino,IP_destino_red,IP_ALEN);
+
+ 	if(enviar((uint8_t*)"Probando a hacer un ping",pila_protocolos,strlen("Probando a hacer un ping"),&parametros_icmp)==ERROR ){
 		printf("Error: enviar(): %s %s %d.\n",errbuf,__FILE__,__LINE__);
 		return ERROR;
 	}
 	else	cont++;
-	printf("Enviado mensaje %lld, ICMP almacenado en %s\n\n", cont,fichero_pcap_destino);
+	printf("Enviado mensaje \t%" PRIu64", ICMP almacenado en %s\n\n", cont,fichero_pcap_destino);
 
 		//Cerramos descriptores
 	pcap_close(descr);
@@ -131,7 +145,7 @@ int main(int argc, char **argv){
 
 uint8_t enviar(uint8_t* mensaje, uint16_t* pila_protocolos,uint64_t longitud,void *parametros){
 	uint16_t protocolo=pila_protocolos[0];
-printf("Enviar(%u) %s %d.\n",protocolo,__FILE__,__LINE__);
+	printf("Enviar(%u) %s %d.\n",protocolo,__FILE__,__LINE__);
 	if(protocolos_registrados[protocolo]==NULL){
 		printf("Protocolo %"SCNu16" desconocido\n",protocolo);
 		return ERROR;
@@ -218,6 +232,7 @@ printf("moduloIP(%u) %s %d.\n",protocolo_inferior,__FILE__,__LINE__);
 //A implementar el datagrama
 //[...] 
 //llamada a protocolo de nivel inferior [...]
+	return 0;
 }
 
 
@@ -262,7 +277,7 @@ printf("moduloETH(fisica) %s %d.\n",__FILE__,__LINE__);	uint8_t trama[ETH_FRAME_
 uint8_t moduloICMP(uint8_t* mensaje, uint16_t* pila_protocolos,uint64_t longitud,void *parametros){
 //Modulo ICMP a implementar
 //[....]
-
+	return 0;
 }
 
 
@@ -282,6 +297,7 @@ uint8_t moduloICMP(uint8_t* mensaje, uint16_t* pila_protocolos,uint64_t longitud
 uint8_t aplicarMascara(uint8_t* IP, uint8_t* mascara, uint32_t longitud, uint8_t* resultado){
 //A implementar
 //[...]
+	return 0;
 }
 
 
