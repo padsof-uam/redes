@@ -26,7 +26,7 @@ uint8_t ARPrequest(char* iface, uint8_t* IP, uint8_t* retorno){
 	FILE *f;
 	if(IP==NULL || iface==NULL)
 		return ERROR;
-	sprintf(IP_char,"%" SCNu8 " .%" SCNu8 " .%" SCNu8 " .%" SCNu8,IP[0],IP[1],IP[2],IP[3]);
+	sprintf(IP_char,"%" SCNu8 ".%" SCNu8 ".%" SCNu8 ".%" SCNu8,IP[0],IP[1],IP[2],IP[3]);
 	sprintf(comando,"arping %s -I %s -c 6",IP_char,iface);
 	f = popen(comando,"r");
 	if(f == NULL){

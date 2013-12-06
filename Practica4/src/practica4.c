@@ -110,6 +110,7 @@ int main(int argc, char **argv){
 
 	printf("Enviado mensaje \t%" PRIu64", almacenado en %s\n\n\n", cont,fichero_pcap_destino);
 
+
 		//Luego un paquete ICMP en concreto un ping
 	pila_protocolos[0]=ICMP_PROTO;
 	pila_protocolos[1]=IP_PROTO;
@@ -175,14 +176,17 @@ uint8_t enviar(uint8_t* mensaje, uint16_t* pila_protocolos,uint64_t longitud,voi
 
 uint8_t moduloUDP(uint8_t* mensaje, uint16_t* pila_protocolos,uint64_t longitud,void *parametros){
 	uint8_t segmento[UDP_SEG_MAX]={0};
+	uint8_t * checksum = (uint8_t* ) calloc (2,sizeof(uint8_t));
+	uint8_t * checksum_bytes;
 	uint16_t puerto_origen,suma_control=0;
 	uint16_t aux16;
 	uint32_t pos=0;
 	uint16_t protocolo_inferior=pila_protocolos[1];
-printf("moduloUDP(%u) %s %d.\n",protocolo_inferior,__FILE__,__LINE__);
-	Parametros udpdatos=*((Parametros*)parametros);
-	uint16_t puerto_destino=udpdatos.puerto_destino;
-	if(longitud>pow(2,16)){
+	printf("moduloUDP(%u) %s %d.\n",protocolo_inferior,__FILE__,__LINE__);
+	Parametros UDP_data=*((Parametros*)parametros);
+	uint16_t puerto_destino=UDP_data.puerto_destino;
+
+	if(longitud>pow(2,16)-UDP_HLEN){
 		printf("Error: tamano demasiado grande para UDP (%f).\n",pow(2,16));
 		return ERROR;
 	}
@@ -192,10 +196,29 @@ printf("moduloUDP(%u) %s %d.\n",protocolo_inferior,__FILE__,__LINE__);
 	aux16=htons(puerto_origen);
 	memcpy(segmento+pos,&aux16,sizeof(uint16_t));
 	pos+=sizeof(uint16_t);
+
+	aux16=htons(puerto_destino);
+	memcpy(segmento+pos, &aux16, sizeof(uint16_t));
+	pos+=sizeof(uint16_t);
+
+	aux16=htons(longitud);
+	memcpy(segmento+pos, &aux16, sizeof(uint16_t));
+	pos+=sizeof(uint16_t);
+
+	checksum_bytes = segmento;
+	aux16=0;
+	memcpy(segmento+pos, &aux16, sizeof(uint16_t));
+	pos+=sizeof(uint16_t);
+
+	memcpy(segmento+pos, mensaje, longitud*sizeof(uint8_t));
+	pos+=longitud*sizeof(uint8_t);
 	
-//Por completar el segmento [...]
-//[...] 
-//Se llama al protocolo definido de nivel inferior a traves de los punteros registrados en la tabla de protocolos registrados
+	calcularChecksum(longitud, segmento, checksum);
+	
+	aux16=htons((checksum[0]>>8)+checksum[1]);
+	memcpy(checksum_bytes, &aux16, sizeof(uint16_t));
+
+	//Llamamos al protocolo definido de nivel inferior a traves de los punteros registrados en la tabla de protocolos registrados
 	return protocolos_registrados[protocolo_inferior](segmento,pila_protocolos,longitud+pos,parametros);
 }
 
@@ -212,30 +235,105 @@ printf("moduloUDP(%u) %s %d.\n",protocolo_inferior,__FILE__,__LINE__);
 ****************************************************************************************/
 
 uint8_t moduloIP(uint8_t* segmento, uint16_t* pila_protocolos,uint64_t longitud,void *parametros){
-	uint8_t datagrama[IP_DATAGRAM_MAX]={0};
-	uint32_t aux32;
-	uint16_t aux16;
+	uint8_t i;
 	uint8_t aux8;
+	uint16_t aux16;
+	uint32_t aux32;
 	uint32_t pos=0,pos_control=0;
+	uint8_t datagrama[IP_DATAGRAM_MAX]={0};
 	uint8_t IP_origen[IP_ALEN];
+	uint8_t GateWay[IP_ALEN];
+	uint8_t ETH_dest[ETH_ALEN];
 	uint16_t protocolo_superior=pila_protocolos[0];
 	uint16_t protocolo_inferior=pila_protocolos[2];
-	pila_protocolos++;
+
 	uint8_t mascara[IP_ALEN],IP_rango_origen[IP_ALEN],IP_rango_destino[IP_ALEN];
 
-printf("moduloIP(%u) %s %d.\n",protocolo_inferior,__FILE__,__LINE__);
+	pila_protocolos++;
 
-	Parametros ipdatos=*((Parametros*)parametros);
-	uint8_t* IP_destino=ipdatos.IP_destino;
+	printf("moduloIP(%u) %s %d.\n",protocolo_inferior,__FILE__,__LINE__);
 
+	Parametros IP_data=*((Parametros*)parametros);
+	uint8_t* IP_destino=IP_data.IP_destino;
+	
 	if(longitud>pow(2,16)){
-		printf("Error: tamano demasiado grande para IP.\n");
+		printf("Fragmentación.\n");
+		int num_packtes = longitud/IP_DATAGRAM_MAX;
+		//recursiva
 		return ERROR;
 	}
-//A implementar el datagrama
-//[...] 
-//llamada a protocolo de nivel inferior [...]
-	return 0;
+
+	obtenerMascaraInterface(interface, mascara);
+
+	obtenerIPInterface(interface, IP_origen);
+
+	aplicarMascara(IP_destino, mascara, IP_ALEN, IP_rango_destino);
+	aplicarMascara(IP_origen, mascara, IP_ALEN, IP_rango_origen);
+
+	for(i=0;i<IP_ALEN;++i)
+		if(IP_rango_origen[i]!=IP_rango_destino[i])
+			break;
+
+	if (i!=4)
+	{
+		obtenerGateway(interface, GateWay);
+		ARPrequest(interface, GateWay, ETH_dest);
+		memcpy(IP_data.ETH_destino,ETH_dest,6*sizeof(uint8_t));
+		printf("No pertenece a la subred\n");
+	}
+	else{
+		ARPrequest(interface, IP_destino, ETH_dest);
+		memcpy(IP_data.ETH_destino,ETH_dest,6*sizeof(uint8_t));
+		printf("Pertenece a la subred\n");
+	}
+	pos+=sizeof(uint8_t);
+	
+	memcpy(datagrama+pos, &IP_data.tipo, sizeof(uint8_t));
+	pos+=sizeof(uint8_t);
+	
+	aux32=htonl(longitud);
+	memcpy(datagrama+pos, &aux32, sizeof(uint32_t));
+	pos+=sizeof(uint32_t);
+
+	//Identificación, flags, posición
+
+	aux32=0;
+	memcpy(datagrama+pos, &aux32, sizeof(uint32_t));
+	pos+=sizeof(uint32_t);
+
+	aux8=0;
+	memcpy(datagrama+pos, &aux8, sizeof(uint8_t));
+	pos+=sizeof(uint8_t);
+
+	aux8=UDP_PROTO;
+	memcpy(datagrama+pos, &aux8, sizeof(uint8_t));
+	pos+=sizeof(uint8_t);
+
+	aux16=0;
+	memcpy(datagrama+pos, &aux16, sizeof(uint16_t));
+	pos+=sizeof(uint16_t);
+
+	obtenerIPInterface(interface, IP_origen);
+	for (i = 0; i < 4; ++i)
+	{
+		memcpy(datagrama+pos, &IP_origen[i], sizeof(uint8_t));
+		memcpy(datagrama+pos+4*sizeof(uint8_t), &IP_destino[i], sizeof(uint8_t));
+	}
+	pos+=8*sizeof(uint8_t);
+
+	//Opciones y relleno
+	aux32=0;
+	memcpy(datagrama+pos, &aux32, sizeof(uint32_t));
+	pos+=sizeof(uint32_t);
+
+	aux8=0x40+pos;
+
+	memcpy(datagrama, &aux8, sizeof(uint8_t));
+
+	//Copiamos el segmento que viene de UDP, con los datos.
+	memcpy(datagrama, segmento, sizeof(uint8_t)*longitud);
+
+	return protocolos_registrados[protocolo_inferior](datagrama,pila_protocolos,longitud+pos,parametros);
 }
 
 
@@ -252,15 +350,32 @@ printf("moduloIP(%u) %s %d.\n",protocolo_inferior,__FILE__,__LINE__);
 
 uint8_t moduloETH(uint8_t* datagrama, uint16_t* pila_protocolos,uint64_t longitud,void *parametros){
 
-//[...] Variables del modulo  a implementar
+	uint8_t pos=0;
+	printf("moduloETH(fisica) %s %d.\n",__FILE__,__LINE__);
+	uint8_t trama[ETH_FRAME_MAX]={0};
+	uint8_t ETH_src[ETH_ALEN];
+	Parametros ETH_data=*((Parametros*)parametros);
+	uint16_t protocolo_inferior=pila_protocolos[3];
+	memcpy(trama, ETH_data.ETH_destino, ETH_ALEN*sizeof(uint8_t));
 
-printf("moduloETH(fisica) %s %d.\n",__FILE__,__LINE__);	uint8_t trama[ETH_FRAME_MAX]={0};
+	struct pcap_pkthdr header;
 
-//[...] Cabecera del modulo a implementar
+	header.caplen=longitud;
+	header.len=longitud;
+	pos+=ETH_ALEN*sizeof(uint8_t);
+	if (obtenerMACdeInterface(interface, ETH_src) == ERROR)
+		return ERROR;
+	memcpy(trama+pos, ETH_src, ETH_ALEN*sizeof(uint8_t));
+	
+	pos+=ETH_ALEN*sizeof(uint8_t);
+	uint16_t aux16=IP_PROTO;
+	memcpy(trama+pos, &ETH_data.tipo, sizeof(uint16_t));
 
+	pos+=sizeof(uint16_t);
+	
+	memcpy(trama+pos, datagrama, sizeof(uint8_t)*longitud);
 
-//Enviar a capa fisica a implementar, [...]  
-//Almacenamos la salida por cuestiones de debugging a implementar [...]
+	pcap_dump(pdumper, &header, trama);
 	
 	return OK;
 }
@@ -298,9 +413,16 @@ uint8_t moduloICMP(uint8_t* mensaje, uint16_t* pila_protocolos,uint64_t longitud
 ****************************************************************************************/
 
 uint8_t aplicarMascara(uint8_t* IP, uint8_t* mascara, uint32_t longitud, uint8_t* resultado){
-//A implementar
-//[...]
-	return 0;
+	int i;
+	
+	if (IP==NULL || mascara==NULL)
+		return ERROR;
+	
+	for (i=0;i<longitud;++i)
+		resultado[i] = IP[i] & mascara[i];
+	
+
+	return OK;
 }
 
 
@@ -354,6 +476,7 @@ uint8_t calcularChecksum(uint16_t longitud, uint8_t *datos, uint8_t *checksum) {
     sum = ~sum;      
     checksum[0] = sum >> 8;
     checksum[1] = sum & 0xFF;
+
     return OK;
 }
 
@@ -372,9 +495,11 @@ uint8_t inicializarPilaEnviar() {
 		return ERROR;
 	if(registrarProtocolo(IP_PROTO, moduloIP, protocolos_registrados)==ERROR)
 		return ERROR;
+	if(registrarProtocolo(UDP_PROTO, moduloUDP, protocolos_registrados)==ERROR)
+		return ERROR;
+	if(registrarProtocolo(ICMP_PROTO, moduloICMP,protocolos_registrados)==ERROR)
+		return ERROR;
 	
-//A registrar los modulos de UDP y ICMP [...] 
-
 	return OK;
 }
 

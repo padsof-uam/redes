@@ -1,4 +1,7 @@
 
-Hay que registrar cada uno de los protocolos que vayamos a usar.
+UDP fragmenta??
+Si es que no practica4.cpp:183
 
-Formar el paquete. Lo demás ya lo dan
+En módulo UDP wtf longitud es uint_64 si como mucho es uint_16...
+
+hton a bytes sueltos? xk checksum es uint_8 y no 16?

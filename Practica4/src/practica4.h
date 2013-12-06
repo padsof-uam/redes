@@ -52,9 +52,6 @@
 #define OK 0
 #define ERROR 1
 
-#define OK 0
-#define ERROR 1
-
 #define min(a, b) (((a) < (b)) ? (a) : (b))
 
 typedef uint8_t (*pf_notificacion) (uint8_t* datos, uint16_t* pila_protocolos,uint64_t longitud,void *parametros);
