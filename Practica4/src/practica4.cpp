@@ -17,6 +17,9 @@ char* interface;	//Interface donde transmitir por ejemplo "eth0"
 uint16_t ID=1;		//Identificador IP
 
 
+static pf_notificacion protocolos_registrados[MAX_PROTOCOL];
+
+
 void handleSignal(int nsignal){
 	printf("Control C pulsado (\t%" PRIu64")\n", cont);
 	pcap_close(descr);

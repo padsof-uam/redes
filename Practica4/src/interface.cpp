@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "interface.h"
+#include "practica4.h"
 
 /***************************Funciones extraer configuracion interface/socket/enlace*************/
 int sock=-1 ;		//socket auxiliar

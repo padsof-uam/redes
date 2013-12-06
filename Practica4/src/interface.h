@@ -1,8 +1,6 @@
 #ifndef __INTERFACE_H
 #define __INTERFACE_H
-#ifdef CJJJ_H
-#define CJJ_H
-#endif
+
 #define __STDC_FORMAT_MACROS
 
 /***************************Funciones extraer configuracion interface/socket/enlace*************/
@@ -27,7 +25,6 @@
 #include <netinet/in.h>
 #include <inttypes.h>
 #include <math.h>
-#include "practica4.h"
 
 uint8_t obtenerPuertoOrigen(uint16_t* puerto);
 uint8_t obtenerMACdeInterface(char* interface, uint8_t* MAC);
