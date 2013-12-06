@@ -1,4 +1,4 @@
-GCC = g++
+GCC = gcc
 # CPPFLAGS = -ggdb -Wall -pedantic -std=c++98
 # Quitamos warnings porque el código que nos han dado está lleno de warnings por todas partes.
 CPPFLAGS = -ggdb 
@@ -9,8 +9,8 @@ OBJDIR = obj
 SRCDIR = src
 BINDIR = bin
 
-SRCS := $(wildcard $(SRCDIR)/*.cpp)
-OBJS := $(addprefix $(OBJDIR)/, $(patsubst %.cpp,%.o, $(SRCS)))
+SRCS := $(wildcard $(SRCDIR)/*.c)
+OBJS := $(addprefix $(OBJDIR)/, $(patsubst %.c,%.o, $(SRCS)))
 
 .PRECIOUS: %.o %.d
 .PHONY: debug clean 
@@ -33,7 +33,7 @@ $(OBJDIR)/.deps: $(SRCS) | $(OBJDIR)
 $(TARGET): $(OBJDIR)/src/$(TARGET).o $(OBJS) | $(BINDIR) depend
 	@echo Building final target: $@
 	@$(GCC) $(CPPFLAGS) -o $(BINDIR)/$@ $^ $(LIBS)
-$(OBJDIR)/%.o: %.cpp | $(OBJDIR) depend
+$(OBJDIR)/%.o: %.c | $(OBJDIR) depend
 	@echo "$< -> $@"
 	@$(GCC) $(CPPFLAGS) -c $< -o $@
 $(OBJDIR):
