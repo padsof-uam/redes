@@ -1,6 +1,8 @@
 #ifndef __INTERFACE_H
 #define __INTERFACE_H
-
+#ifdef CJJJ_H
+#define CJJ_H
+#endif
 #define __STDC_FORMAT_MACROS
 
 /***************************Funciones extraer configuracion interface/socket/enlace*************/

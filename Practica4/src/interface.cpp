@@ -16,17 +16,17 @@ int sock=-1 ;		//socket auxiliar
 * Retorno: OK/ERROR									*
 ****************************************************************************************/
 
-uint8_t ARPrequest(char* interface, uint8_t* IP, uint8_t* retorno){
+uint8_t ARPrequest(char* iface, uint8_t* IP, uint8_t* retorno){
 	char comando[255];
 	 char linea[255];
 	 char ETH_destino_aux[100];
 	 char IP_char[16];
 	 
 	FILE *f;
-	if(IP==NULL || interface==NULL)
+	if(IP==NULL || iface==NULL)
 		return ERROR;
 	sprintf(IP_char,"%" SCNu8 " .%" SCNu8 " .%" SCNu8 " .%" SCNu8,IP[0],IP[1],IP[2],IP[3]);
-	sprintf(comando,"arping %s -I %s -c 6",IP_char,interface);
+	sprintf(comando,"arping %s -I %s -c 6",IP_char,iface);
 	f = popen(comando,"r");
 	if(f == NULL){
 		printf("Error ejecutando el comando: %s\n",comando);

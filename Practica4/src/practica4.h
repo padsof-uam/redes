@@ -1,6 +1,8 @@
 #ifndef __P4_H
 #define __P4_H
-
+#ifdef CJJJ_H
+#define CJJ_H
+#endif
 #include <stdio.h>
 #include <stdlib.h>
 
