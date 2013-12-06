@@ -1,7 +1,7 @@
 GCC = g++
 CPPFLAGS = -ggdb -Wall -pedantic -std=c++98
 LIBS = -lpcap
-TARGET = main
+TARGET = practica4
 
 OBJDIR = obj
 SRCDIR = src
@@ -9,10 +9,6 @@ BINDIR = bin
 
 SRCS := $(wildcard $(SRCDIR)/*.cpp)
 OBJS := $(addprefix $(OBJDIR)/, $(patsubst %.cpp,%.o, $(SRCS)))
-
-write:
-	@echo $(SRCS)
-	@echo $(OBJS)
 
 .PRECIOUS: %.o %.d
 .PHONY: debug clean 
@@ -32,7 +28,7 @@ $(OBJDIR)/.deps: $(SRCS) | $(OBJDIR)
 
 -include $(OBJDIR)/.deps
 
-$(TARGET): $(OBJDIR)/src/main.o $(OBJS) | $(BINDIR) depend
+$(TARGET): $(OBJDIR)/src/$(TARGET).o $(OBJS) | $(BINDIR) depend
 	@echo Building final target: $@
 	@$(GCC) $(CPPFLAGS) -o $(BINDIR)/$@ $^ $(LIBS)
 $(OBJDIR)/%.o: %.cpp | $(OBJDIR) depend
