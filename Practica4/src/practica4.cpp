@@ -69,7 +69,7 @@ int main(int argc, char **argv){
 		//Por comodidad definimos interface como una variable global
 	interface=argv[1];
 		//Leemos la IP a donde transmitir y la almacenamos en orden de red
-	if(sscanf(argv[2],"%"SCNu8".%"SCNu8".%"SCNu8".%"SCNu8"",&(IP_destino_red[0]),&(IP_destino_red[1]),&(IP_destino_red[2]),&(IP_destino_red[3]))!=IP_ALEN){
+	if(sscanf(argv[2],"%" SCNu8 ".%" SCNu8 ".%" SCNu8 ".%" SCNu8 "",&(IP_destino_red[0]),&(IP_destino_red[1]),&(IP_destino_red[2]),&(IP_destino_red[3]))!=IP_ALEN){
 		printf("Error: Fallo en la lectura IP destino %s\n",argv[2]);
 		return ERROR;
 	}
@@ -147,7 +147,7 @@ uint8_t enviar(uint8_t* mensaje, uint16_t* pila_protocolos,uint64_t longitud,voi
 	uint16_t protocolo=pila_protocolos[0];
 	printf("Enviar(%u) %s %d.\n",protocolo,__FILE__,__LINE__);
 	if(protocolos_registrados[protocolo]==NULL){
-		printf("Protocolo %"SCNu16" desconocido\n",protocolo);
+		printf("Protocolo %" SCNu16 " desconocido\n",protocolo);
 		return ERROR;
 	}
 	else {

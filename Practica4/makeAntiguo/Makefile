@@ -1,7 +1,7 @@
 GCC = g++
 CPPFLAGS = -ggdb -Wall -pedantic -std=c++98
 LIBS = -lpcap
-TARGET = practica4
+TARGET = main
 
 OBJDIR = obj
 SRCDIR = src

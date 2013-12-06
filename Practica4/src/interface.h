@@ -1,6 +1,8 @@
 #ifndef __INTERFACE_H
 #define __INTERFACE_H
 
+#define __STDC_FORMAT_MACROS
+
 /***************************Funciones extraer configuracion interface/socket/enlace*************/
 #include <stdio.h>
 #include <stdlib.h>

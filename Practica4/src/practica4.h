@@ -58,6 +58,7 @@
 #define min(a, b) (((a) < (b)) ? (a) : (b))
 
 typedef uint8_t (*pf_notificacion) (uint8_t* datos, uint16_t* pila_protocolos,uint64_t longitud,void *parametros);
+
 pf_notificacion protocolos_registrados[MAX_PROTOCOL];
 
 typedef struct parametros{

@@ -17,13 +17,17 @@ int sock=-1 ;		//socket auxiliar
 ****************************************************************************************/
 
 uint8_t ARPrequest(char* interface, uint8_t* IP, uint8_t* retorno){
-	char comando[255]; char linea[255]; char ETH_destino_aux[100]; char IP_char[16];
+	char comando[255];
+	 char linea[255];
+	 char ETH_destino_aux[100];
+	 char IP_char[16];
+	 
 	FILE *f;
-	sprintf(IP_char,"%"SCNu8".%"SCNu8".%"SCNu8".%"SCNu8,IP[0],IP[1],IP[2],IP[3]);
 	if(IP==NULL || interface==NULL)
 		return ERROR;
+	sprintf(IP_char,"%" SCNu8 " .%" SCNu8 " .%" SCNu8 " .%" SCNu8,IP[0],IP[1],IP[2],IP[3]);
 	sprintf(comando,"arping %s -I %s -c 6",IP_char,interface);
-	f = popen(comando, "r");
+	f = popen(comando,"r");
 	if(f == NULL){
 		printf("Error ejecutando el comando: %s\n",comando);
 		return ERROR;
@@ -43,7 +47,7 @@ uint8_t ARPrequest(char* interface, uint8_t* IP, uint8_t* retorno){
 		return ERROR;
 	}
 	ETH_destino_aux[strlen((char*)ETH_destino_aux)-1]=0;
-	if(sscanf(ETH_destino_aux,"%"SCNx8":%"SCNx8":%"SCNx8":%"SCNx8":%"SCNx8":%"SCNx8"" ,retorno,retorno+1,retorno+2,retorno+3,retorno+4,retorno+5)<ETH_ALEN){
+	if(sscanf(ETH_destino_aux,"%" SCNx8 ":%" SCNx8 ":%" SCNx8 ":%" SCNx8 ":%" SCNx8 ":%" SCNx8 "" ,retorno,retorno+1,retorno+2,retorno+3,retorno+4,retorno+5)<ETH_ALEN){
 		printf("La dirección IP a traducir es inalcanzable (Puede ser problemas de configuración de la subred o que no responda): %s\n",comando);
 		return ERROR;
 	}
@@ -110,7 +114,7 @@ uint8_t obtenerMascaraInterface(char* interface, uint8_t* retorno){
 	close(fd);
 	memcpy(retorno,&(*(struct sockaddr_in *)&ifr.ifr_netmask).sin_addr,sizeof(uint8_t)*IP_ALEN);
 printf("Retorno obtenerMascaraInterface():\n");
-printf("\t%"SCNu8".%"SCNu8".%"SCNu8".%"SCNu8"\n",retorno[0],retorno[1],retorno[2],retorno[3]);
+printf("\t%" SCNu8 ".%" SCNu8 ".%" SCNu8 ".%" SCNu8 "\n",retorno[0],retorno[1],retorno[2],retorno[3]);
 	 return OK;
 }
 
@@ -200,13 +204,13 @@ uint8_t obtenerGateway(char * interface, uint8_t* retorno){
 	}
 	fgets(linea,255,f);
 	//sscanf(linea,"%s\n",retorno);
-	if(sscanf(linea,"%"SCNu8".%"SCNu8".%"SCNu8".%"SCNu8"\n" ,retorno,retorno+1,retorno+2,retorno+3)<IP_ALEN){
+	if(sscanf(linea,"%" SCNu8 ".%" SCNu8 ".%" SCNu8 ".%" SCNu8 "\n" ,retorno,retorno+1,retorno+2,retorno+3)<IP_ALEN){
 		printf("La direccion IP a traducir es inalcanzable (puede ser problemas de configuracion de la subred o que el equipo no responda): %s\n",comando);
 		return ERROR;
 	}
 	pclose(f);
 printf("Retorno obtenerGateway():\n");
-printf("\t%"SCNu8".%"SCNu8".%"SCNu8".%"SCNu8"\n",retorno[0],retorno[1],retorno[2],retorno[3]);
+printf("\t%" SCNu8 ".%" SCNu8 ".%" SCNu8 ".%" SCNu8 "\n",retorno[0],retorno[1],retorno[2],retorno[3]);
 	return OK;
 }
 

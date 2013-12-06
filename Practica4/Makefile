@@ -10,6 +10,9 @@ BINDIR = bin
 SRCS := $(wildcard $(SRCDIR)/*.cpp)
 OBJS := $(addprefix $(OBJDIR)/, $(patsubst %.cpp,%.o, $(SRCS)))
 
+write:
+	@echo $(SRCS)
+	@echo $(OBJS)
 
 .PRECIOUS: %.o %.d
 .PHONY: debug clean 
