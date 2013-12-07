@@ -180,11 +180,11 @@ uint8_t moduloUDP(uint8_t* mensaje, uint16_t* pila_protocolos,uint64_t longitud,
 	uint8_t * checksum_bytes;
 	uint16_t puerto_origen,suma_control=0;
 	uint16_t aux16;
+	uint16_t puerto_destino;
 	uint32_t pos=0;
 	uint16_t protocolo_inferior=pila_protocolos[1];
 	printf("moduloUDP(%u) %s %d.\n",protocolo_inferior,__FILE__,__LINE__);
 	Parametros UDP_data=*((Parametros*)parametros);
-	uint16_t puerto_destino=UDP_data.puerto_destino;
 
 	if(longitud>pow(2,16)-UDP_HLEN){
 		printf("Error: tamano demasiado grande para UDP (%f).\n",pow(2,16));
@@ -193,10 +193,12 @@ uint8_t moduloUDP(uint8_t* mensaje, uint16_t* pila_protocolos,uint64_t longitud,
 
 //[...]
 
+	obtenerPuertoOrigen(&puerto_origen);
 	aux16=htons(puerto_origen);
 	memcpy(segmento+pos,&aux16,sizeof(uint16_t));
 	pos+=sizeof(uint16_t);
 
+	puerto_destino=UDP_data.puerto_destino;
 	aux16=htons(puerto_destino);
 	memcpy(segmento+pos, &aux16, sizeof(uint16_t));
 	pos+=sizeof(uint16_t);
@@ -213,7 +215,7 @@ uint8_t moduloUDP(uint8_t* mensaje, uint16_t* pila_protocolos,uint64_t longitud,
 	memcpy(segmento+pos, mensaje, longitud*sizeof(uint8_t));
 	pos+=longitud*sizeof(uint8_t);
 	
-	calcularChecksum(longitud, segmento, checksum);
+	calcularChecksum(longitud+UDP_HLEN, segmento, checksum);
 	
 	aux16=htons((checksum[0]>>8)+checksum[1]);
 	memcpy(checksum_bytes, &aux16, sizeof(uint16_t));
@@ -239,11 +241,13 @@ uint8_t moduloIP(uint8_t* segmento, uint16_t* pila_protocolos,uint64_t longitud,
 	uint8_t aux8;
 	uint16_t aux16;
 	uint32_t aux32;
-	uint32_t pos=0,pos_control=0;
+	uint32_t pos_control=0;
+	uint8_t pos=0;
 	uint8_t datagrama[IP_DATAGRAM_MAX]={0};
 	uint8_t IP_origen[IP_ALEN];
 	uint8_t GateWay[IP_ALEN];
 	uint8_t ETH_dest[ETH_ALEN];
+	uint8_t * checksum = (uint8_t* ) calloc (2,sizeof(uint8_t));
 	uint16_t protocolo_superior=pila_protocolos[0];
 	uint16_t protocolo_inferior=pila_protocolos[2];
 
@@ -286,14 +290,15 @@ uint8_t moduloIP(uint8_t* segmento, uint16_t* pila_protocolos,uint64_t longitud,
 		memcpy(IP_data.ETH_destino,ETH_dest,6*sizeof(uint8_t));
 		printf("Pertenece a la subred\n");
 	}
+
+	//Empezamos
 	pos+=sizeof(uint8_t);
 	
-	memcpy(datagrama+pos, &IP_data.tipo, sizeof(uint8_t));
+	aux8=0;
+	memcpy(datagrama+pos, &aux8, sizeof(uint8_t));
 	pos+=sizeof(uint8_t);
 	
-	aux32=htonl(longitud);
-	memcpy(datagrama+pos, &aux32, sizeof(uint32_t));
-	pos+=sizeof(uint32_t);
+	pos+=sizeof(uint16_t);
 
 	//Identificación, flags, posición
 
@@ -301,6 +306,7 @@ uint8_t moduloIP(uint8_t* segmento, uint16_t* pila_protocolos,uint64_t longitud,
 	memcpy(datagrama+pos, &aux32, sizeof(uint32_t));
 	pos+=sizeof(uint32_t);
 
+	//Tiempo de vida
 	aux8=0;
 	memcpy(datagrama+pos, &aux8, sizeof(uint8_t));
 	pos+=sizeof(uint8_t);
@@ -309,6 +315,8 @@ uint8_t moduloIP(uint8_t* segmento, uint16_t* pila_protocolos,uint64_t longitud,
 	memcpy(datagrama+pos, &aux8, sizeof(uint8_t));
 	pos+=sizeof(uint8_t);
 
+	//Checksum
+	uint8_t pos_checkSum=pos;
 	aux16=0;
 	memcpy(datagrama+pos, &aux16, sizeof(uint16_t));
 	pos+=sizeof(uint16_t);
@@ -316,8 +324,8 @@ uint8_t moduloIP(uint8_t* segmento, uint16_t* pila_protocolos,uint64_t longitud,
 	obtenerIPInterface(interface, IP_origen);
 	for (i = 0; i < 4; ++i)
 	{
-		memcpy(datagrama+pos, &IP_origen[i], sizeof(uint8_t));
-		memcpy(datagrama+pos+4*sizeof(uint8_t), &IP_destino[i], sizeof(uint8_t));
+		memcpy(datagrama+pos+i, &IP_origen[i], sizeof(uint8_t));
+		memcpy(datagrama+pos+i+4*sizeof(uint8_t), &IP_destino[i], sizeof(uint8_t));
 	}
 	pos+=8*sizeof(uint8_t);
 
@@ -325,15 +333,22 @@ uint8_t moduloIP(uint8_t* segmento, uint16_t* pila_protocolos,uint64_t longitud,
 	aux32=0;
 	memcpy(datagrama+pos, &aux32, sizeof(uint32_t));
 	pos+=sizeof(uint32_t);
-
-	aux8=0x40+pos;
-
+	printf("pos:%d\n", pos);
+	printf("longitud:%d\n",longitud );
+	aux8=64+pos/4;
 	memcpy(datagrama, &aux8, sizeof(uint8_t));
 
-	//Copiamos el segmento que viene de UDP, con los datos.
-	memcpy(datagrama, segmento, sizeof(uint8_t)*longitud);
+	aux16=htons(longitud+pos);
+	memcpy(datagrama+2*sizeof(uint8_t), &aux16, sizeof(uint16_t));
+	
 
-	return protocolos_registrados[protocolo_inferior](datagrama,pila_protocolos,longitud+pos,parametros);
+	calcularChecksum(longitud+pos, datagrama, checksum);
+	memcpy(datagrama+pos_checkSum, checksum, 2*sizeof(uint8_t));
+
+	//Copiamos el segmento que viene de UDP, con los datos.
+	memcpy(datagrama+pos, segmento, sizeof(uint8_t)*longitud);
+
+	return protocolos_registrados[protocolo_inferior](datagrama,pila_protocolos,longitud+pos,(void *)&IP_data);
 }
 
 
@@ -356,27 +371,31 @@ uint8_t moduloETH(uint8_t* datagrama, uint16_t* pila_protocolos,uint64_t longitu
 	uint8_t ETH_src[ETH_ALEN];
 	Parametros ETH_data=*((Parametros*)parametros);
 	uint16_t protocolo_inferior=pila_protocolos[3];
-	memcpy(trama, ETH_data.ETH_destino, ETH_ALEN*sizeof(uint8_t));
 
 	struct pcap_pkthdr header;
 
-	header.caplen=longitud;
-	header.len=longitud;
+	header.caplen=longitud+ETH_HLEN;
+	printf("caplen%d\n",header.caplen);
+	header.len=longitud+ETH_HLEN;
+	printf("len%d\n",header.len);
+
+	memcpy(trama, ETH_data.ETH_destino, ETH_ALEN*sizeof(uint8_t));
 	pos+=ETH_ALEN*sizeof(uint8_t);
 	if (obtenerMACdeInterface(interface, ETH_src) == ERROR)
 		return ERROR;
-	memcpy(trama+pos, ETH_src, ETH_ALEN*sizeof(uint8_t));
-	
-	pos+=ETH_ALEN*sizeof(uint8_t);
-	uint16_t aux16=IP_PROTO;
-	memcpy(trama+pos, &ETH_data.tipo, sizeof(uint16_t));
 
+	memcpy(trama+pos, ETH_src, ETH_ALEN*sizeof(uint8_t));
+	pos+=ETH_ALEN*sizeof(uint8_t);
+
+	uint16_t aux16=IP_PROTO;
+	aux16=htons(aux16);
+	memcpy(trama+pos, &aux16, sizeof(uint16_t));
 	pos+=sizeof(uint16_t);
 	
 	memcpy(trama+pos, datagrama, sizeof(uint8_t)*longitud);
 
 	pcap_dump(pdumper, &header, trama);
-	
+
 	return OK;
 }
 
