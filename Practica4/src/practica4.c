@@ -112,14 +112,17 @@ int main(int argc, char **argv){
 
 
 		//Luego un paquete ICMP en concreto un ping
+
+	printf("Vamos con el ping\n");
 	pila_protocolos[0]=ICMP_PROTO;
 	pila_protocolos[1]=IP_PROTO;
-	pila_protocolos[2]=0;
+	pila_protocolos[2]=ETH_PROTO;
 
 	Parametros parametros_icmp;
 	parametros_icmp.tipo=PING_TIPO;
 	parametros_icmp.codigo=PING_CODE;
 	memcpy(parametros_icmp.IP_destino,IP_destino_red,IP_ALEN);
+	parametros_icmp.puerto_destino=0;
 
  	if(enviar((uint8_t*)"Probando a hacer un ping",pila_protocolos,strlen("Probando a hacer un ping"),&parametros_icmp)==ERROR ){
 		printf("Error: enviar(): %s %s %d.\n",errbuf,__FILE__,__LINE__);
@@ -176,8 +179,6 @@ uint8_t enviar(uint8_t* mensaje, uint16_t* pila_protocolos,uint64_t longitud,voi
 
 uint8_t moduloUDP(uint8_t* mensaje, uint16_t* pila_protocolos,uint64_t longitud,void *parametros){
 	uint8_t segmento[UDP_SEG_MAX]={0};
-	uint8_t * checksum = (uint8_t* ) calloc (2,sizeof(uint8_t));
-	uint8_t * checksum_bytes;
 	uint16_t puerto_origen,suma_control=0;
 	uint16_t aux16;
 	uint16_t puerto_destino;
@@ -203,23 +204,17 @@ uint8_t moduloUDP(uint8_t* mensaje, uint16_t* pila_protocolos,uint64_t longitud,
 	memcpy(segmento+pos, &aux16, sizeof(uint16_t));
 	pos+=sizeof(uint16_t);
 
-	aux16=htons(longitud);
+	aux16=htons(longitud+UDP_HLEN);
 	memcpy(segmento+pos, &aux16, sizeof(uint16_t));
 	pos+=sizeof(uint16_t);
 
-	checksum_bytes = segmento;
 	aux16=0;
 	memcpy(segmento+pos, &aux16, sizeof(uint16_t));
 	pos+=sizeof(uint16_t);
 
-	memcpy(segmento+pos, mensaje, longitud*sizeof(uint8_t));
-	pos+=longitud*sizeof(uint8_t);
-	
-	calcularChecksum(longitud+UDP_HLEN, segmento, checksum);
-	
-	aux16=htons((checksum[0]>>8)+checksum[1]);
-	memcpy(checksum_bytes, &aux16, sizeof(uint16_t));
 
+	memcpy(segmento+pos, mensaje, longitud*sizeof(uint8_t));
+			
 	//Llamamos al protocolo definido de nivel inferior a traves de los punteros registrados en la tabla de protocolos registrados
 	return protocolos_registrados[protocolo_inferior](segmento,pila_protocolos,longitud+pos,parametros);
 }
@@ -307,11 +302,14 @@ uint8_t moduloIP(uint8_t* segmento, uint16_t* pila_protocolos,uint64_t longitud,
 	pos+=sizeof(uint32_t);
 
 	//Tiempo de vida
-	aux8=0;
+	aux8=128;
 	memcpy(datagrama+pos, &aux8, sizeof(uint8_t));
 	pos+=sizeof(uint8_t);
 
-	aux8=UDP_PROTO;
+	if (IP_data.puerto_destino == 0)
+		aux8=ICMP_PROTO;
+	else 
+		aux8=UDP_PROTO;
 	memcpy(datagrama+pos, &aux8, sizeof(uint8_t));
 	pos+=sizeof(uint8_t);
 
@@ -334,15 +332,17 @@ uint8_t moduloIP(uint8_t* segmento, uint16_t* pila_protocolos,uint64_t longitud,
 	memcpy(datagrama+pos, &aux32, sizeof(uint32_t));
 	pos+=sizeof(uint32_t);
 	printf("pos:%d\n", pos);
-	printf("longitud:%d\n",longitud );
+	printf("longitud:%ld\n",longitud );
+
+	//Versión 4 y tamaño de la cabecera.
 	aux8=64+pos/4;
 	memcpy(datagrama, &aux8, sizeof(uint8_t));
 
 	aux16=htons(longitud+pos);
 	memcpy(datagrama+2*sizeof(uint8_t), &aux16, sizeof(uint16_t));
-	
 
 	calcularChecksum(longitud+pos, datagrama, checksum);
+	//aux16=htons(checksum[1]>>8) + checksum[0];
 	memcpy(datagrama+pos_checkSum, checksum, 2*sizeof(uint8_t));
 
 	//Copiamos el segmento que viene de UDP, con los datos.
@@ -395,6 +395,8 @@ uint8_t moduloETH(uint8_t* datagrama, uint16_t* pila_protocolos,uint64_t longitu
 	memcpy(trama+pos, datagrama, sizeof(uint8_t)*longitud);
 
 	pcap_dump(pdumper, &header, trama);
+	pcap_inject(descr, trama, (pos+longitud)*sizeof(uint8_t));
+	
 
 	return OK;
 }
@@ -412,9 +414,48 @@ uint8_t moduloETH(uint8_t* datagrama, uint16_t* pila_protocolos,uint64_t longitu
 ****************************************************************************************/
 
 uint8_t moduloICMP(uint8_t* mensaje, uint16_t* pila_protocolos,uint64_t longitud,void *parametros){
-//Modulo ICMP a implementar
-//[....]
-	return 0;
+
+
+	uint8_t pos,aux8;
+	uint8_t segmento[ICMP_DATAG_MAX];
+	uint8_t checksum[2];
+	uint16_t aux16;
+
+	uint16_t protocolo_inferior=pila_protocolos[1];
+
+
+	Parametros ICMP_data = *((Parametros*) parametros);
+
+	pos = 0;
+	aux8 = ICMP_data.tipo;
+	memcpy(segmento+pos, &aux8, sizeof(uint8_t));	
+	pos += sizeof(uint8_t);
+
+	aux8 = ICMP_data.codigo;
+	memcpy(segmento+pos, &aux8, sizeof(uint8_t));	
+	pos += sizeof(uint8_t);
+
+
+	aux16=0;	
+	memcpy(segmento+pos, &aux16, sizeof(uint16_t));
+	pos+=sizeof(uint16_t);
+
+	aux16 = htons(64);
+	memcpy(segmento+pos, &aux16, sizeof(uint16_t));
+	pos+=sizeof(uint16_t);
+
+	aux16 = htons(1);
+	memcpy(segmento+pos, &aux16, sizeof(uint16_t));
+	pos+=sizeof(uint16_t);
+
+	memcpy(segmento+pos, mensaje, longitud*sizeof(uint8_t));
+
+	calcularChecksum(longitud+pos, segmento, checksum);
+
+	//aux16=htons(0xfd06);
+	memcpy(segmento+2*sizeof(uint8_t), checksum, 2*sizeof(uint8_t));
+
+	return protocolos_registrados[protocolo_inferior](segmento,pila_protocolos,longitud+pos,parametros);
 }
 
 

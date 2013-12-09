@@ -1,7 +1,11 @@
 
-UDP fragmenta??
+UDP fragmenta?? No, lo dice el enunciado
 Si es que no practica4.cpp:183
 
 En módulo UDP wtf longitud es uint_64 si como mucho es uint_16...
 
-hton a bytes sueltos? xk checksum es uint_8 y no 16?
+hton a bytes sueltos? xk checksum es uint_8 y no 16?. El checksum de UDP mal y el de IP bien y están hechos iguales...
+
+Fragmentar IP
+
+Recibir respuesta de ping
