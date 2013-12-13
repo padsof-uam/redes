@@ -232,19 +232,20 @@ uint8_t moduloUDP(uint8_t* mensaje, uint16_t* pila_protocolos,uint64_t longitud,
 ****************************************************************************************/
 
 uint8_t moduloIP(uint8_t* segmento, uint16_t* pila_protocolos,uint64_t longitud,void *parametros){
-	uint8_t i;
 	uint8_t aux8;
 	uint16_t aux16;
 	uint32_t aux32;
 	uint32_t pos_control=0;
-	uint8_t pos=0;
+	uint8_t pos=0,fragmentation=0;
 	uint8_t datagrama[IP_DATAGRAM_MAX]={0};
 	uint8_t IP_origen[IP_ALEN];
 	uint8_t GateWay[IP_ALEN];
 	uint8_t ETH_dest[ETH_ALEN];
 	uint8_t * checksum = (uint8_t* ) calloc (2,sizeof(uint8_t));
+	int num_packets=1,j,i;
 	uint16_t protocolo_superior=pila_protocolos[0];
 	uint16_t protocolo_inferior=pila_protocolos[2];
+	uint16_t MTU,length_fragment,offset=0;
 
 	uint8_t mascara[IP_ALEN],IP_rango_origen[IP_ALEN],IP_rango_destino[IP_ALEN];
 
@@ -255,11 +256,12 @@ uint8_t moduloIP(uint8_t* segmento, uint16_t* pila_protocolos,uint64_t longitud,
 	Parametros IP_data=*((Parametros*)parametros);
 	uint8_t* IP_destino=IP_data.IP_destino;
 	
-	if(longitud>pow(2,16)){
-		printf("Fragmentación.\n");
-		int num_packtes = longitud/IP_DATAGRAM_MAX;
-		//recursiva
-		return ERROR;
+
+	obtenerMTUInterface(interface, &MTU);
+
+	if(longitud>MTU){
+		fragmentation=1;
+		num_packets = longitud/MTU;
 	}
 
 	obtenerMascaraInterface(interface, mascara);
@@ -286,69 +288,91 @@ uint8_t moduloIP(uint8_t* segmento, uint16_t* pila_protocolos,uint64_t longitud,
 		printf("Pertenece a la subred\n");
 	}
 
-	//Empezamos
-	pos+=sizeof(uint8_t);
-	
-	aux8=0;
-	memcpy(datagrama+pos, &aux8, sizeof(uint8_t));
-	pos+=sizeof(uint8_t);
-	
-	pos+=sizeof(uint16_t);
-
-	//Identificación, flags, posición
-
-	aux32=0;
-	memcpy(datagrama+pos, &aux32, sizeof(uint32_t));
-	pos+=sizeof(uint32_t);
-
-	//Tiempo de vida
-	aux8=128;
-	memcpy(datagrama+pos, &aux8, sizeof(uint8_t));
-	pos+=sizeof(uint8_t);
-
-	if (IP_data.puerto_destino == 0)
-		aux8=ICMP_PROTO;
-	else 
-		aux8=UDP_PROTO;
-	memcpy(datagrama+pos, &aux8, sizeof(uint8_t));
-	pos+=sizeof(uint8_t);
-
-	//Checksum
-	uint8_t pos_checkSum=pos;
-	aux16=0;
-	memcpy(datagrama+pos, &aux16, sizeof(uint16_t));
-	pos+=sizeof(uint16_t);
-
-	obtenerIPInterface(interface, IP_origen);
-	for (i = 0; i < 4; ++i)
+	for (j = 0; j < num_packets; ++j)
 	{
-		memcpy(datagrama+pos+i, &IP_origen[i], sizeof(uint8_t));
-		memcpy(datagrama+pos+i+4*sizeof(uint8_t), &IP_destino[i], sizeof(uint8_t));
+		bzero(datagrama, IP_DATAGRAM_MAX);
+		pos=sizeof(uint8_t);
+		
+		aux8=0;
+		memcpy(datagrama+pos, &aux8, sizeof(uint8_t));
+		pos+=sizeof(uint8_t);
+		
+		pos+=sizeof(uint16_t);
+
+		//Identificación
+		aux16=htons(666);
+		memcpy(datagrama+pos, &aux16, sizeof(uint16_t));
+		pos+=sizeof(uint16_t);
+
+
+		aux16=offset;
+
+		//flags
+		if (j!=num_packets-1)
+			aux16 = htons(aux16 | 0x2000);
+		else
+			aux16 = htons(aux16 & 0x1FFF);
+		memcpy(datagrama+pos, &aux16, sizeof(uint16_t));
+		pos+=sizeof(uint16_t);
+
+		//Tiempo de vida
+		aux8=128;
+		memcpy(datagrama+pos, &aux8, sizeof(uint8_t));
+		pos+=sizeof(uint8_t);
+
+		if (IP_data.puerto_destino == 0)
+			aux8=ICMP_PROTO;
+		else 
+			aux8=UDP_PROTO;
+
+		memcpy(datagrama+pos, &aux8, sizeof(uint8_t));
+		pos+=sizeof(uint8_t);
+
+		//Checksum
+		uint8_t pos_checkSum=pos;
+		aux16=0;
+		memcpy(datagrama+pos, &aux16, sizeof(uint16_t));
+		pos+=sizeof(uint16_t);
+
+		obtenerIPInterface(interface, IP_origen);
+		for (i = 0; i < 4; ++i)
+		{
+			memcpy(datagrama+pos+i, &IP_origen[i], sizeof(uint8_t));
+			memcpy(datagrama+pos+i+4*sizeof(uint8_t), &IP_destino[i], sizeof(uint8_t));
+		}
+		pos+=8*sizeof(uint8_t);
+
+		//Opciones y relleno
+		aux32=0;
+		memcpy(datagrama+pos, &aux32, sizeof(uint32_t));
+		pos+=sizeof(uint32_t);
+		
+
+		//Versión 4 y tamaño de la cabecera.
+		aux8=64+pos/4;
+		memcpy(datagrama, &aux8, sizeof(uint8_t));
+
+		//habría que tener en cuenta la longitud dle paquete para la última fragmentación
+		
+		length_fragment = (MTU-pos) - (MTU-pos)%8;
+
+		aux16=htons(length_fragment+pos);
+		memcpy(datagrama+2*sizeof(uint8_t), &aux16, sizeof(uint16_t));
+
+		calcularChecksum(length_fragment+pos, datagrama, checksum);
+
+		memcpy(datagrama+pos_checkSum, checksum, 2*sizeof(uint8_t));
+
+		//Copiamos el segmento que viene de UDP, con los datos.
+		memcpy(datagrama+pos, segmento, sizeof(uint8_t)*(j+1)*(length_fragment));
+		segmento+=(j+1)*(length_fragment);
+
+		offset+=length_fragment/8;
+		
+		protocolos_registrados[protocolo_inferior](datagrama,pila_protocolos,length_fragment+pos,(void *)&IP_data);
 	}
-	pos+=8*sizeof(uint8_t);
-
-	//Opciones y relleno
-	aux32=0;
-	memcpy(datagrama+pos, &aux32, sizeof(uint32_t));
-	pos+=sizeof(uint32_t);
-	printf("pos:%d\n", pos);
-	printf("longitud:%ld\n",longitud );
-
-	//Versión 4 y tamaño de la cabecera.
-	aux8=64+pos/4;
-	memcpy(datagrama, &aux8, sizeof(uint8_t));
-
-	aux16=htons(longitud+pos);
-	memcpy(datagrama+2*sizeof(uint8_t), &aux16, sizeof(uint16_t));
-
-	calcularChecksum(longitud+pos, datagrama, checksum);
-	//aux16=htons(checksum[1]>>8) + checksum[0];
-	memcpy(datagrama+pos_checkSum, checksum, 2*sizeof(uint8_t));
-
-	//Copiamos el segmento que viene de UDP, con los datos.
-	memcpy(datagrama+pos, segmento, sizeof(uint8_t)*longitud);
-
-	return protocolos_registrados[protocolo_inferior](datagrama,pila_protocolos,longitud+pos,(void *)&IP_data);
+	
+	return  OK;
 }
 
 
@@ -371,7 +395,15 @@ uint8_t moduloETH(uint8_t* datagrama, uint16_t* pila_protocolos,uint64_t longitu
 	uint8_t ETH_src[ETH_ALEN];
 	Parametros ETH_data=*((Parametros*)parametros);
 	uint16_t protocolo_inferior=pila_protocolos[3];
+	uint16_t MTU;
 
+	obtenerMTUInterface(interface, &MTU);
+
+	if (longitud>MTU)
+	{
+		printf("Tamaño demasiado grande para ETH\n");
+		return ERROR;
+	}
 	struct pcap_pkthdr header;
 
 	header.caplen=longitud+ETH_HLEN;
@@ -394,7 +426,7 @@ uint8_t moduloETH(uint8_t* datagrama, uint16_t* pila_protocolos,uint64_t longitu
 	
 	memcpy(trama+pos, datagrama, sizeof(uint8_t)*longitud);
 
-	pcap_dump(pdumper, &header, trama);
+	pcap_dump((u_char*) pdumper, &header, trama);
 	pcap_inject(descr, trama, (pos+longitud)*sizeof(uint8_t));
 	
 
