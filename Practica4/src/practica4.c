@@ -7,6 +7,7 @@ Inicio, funciones auxiliares y modulos de transmision de la practica4
 #include <stdio.h>
 #include <stdlib.h>
 #include <errno.h> 
+#include <math.h>
 #include "interface.h"
 #include "practica4.h"
 
@@ -264,8 +265,8 @@ uint8_t moduloIP(uint8_t* segmento, uint16_t* pila_protocolos,uint64_t longitud,
 	obtenerMTUInterface(interface, &MTU);
 
 	if(longitud>MTU){
-		fragmentation=1;
-		num_packets = longitud/MTU;
+		fragmentation = 1;
+		num_packets = (int) ceil((double)longitud / MTU);
 	}
 
 	obtenerMascaraInterface(interface, mascara);

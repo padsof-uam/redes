@@ -2,7 +2,7 @@ GCC = gcc
 # CPPFLAGS = -ggdb -Wall -pedantic -std=c++98
 # Quitamos warnings porque el código que nos han dado está lleno de warnings por todas partes.
 CPPFLAGS = -ggdb 
-LIBS = -lpcap
+LIBS = -lpcap -lm
 TARGET = practica4
 
 OBJDIR = obj
