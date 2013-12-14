@@ -358,7 +358,6 @@ uint8_t moduloIP(uint8_t* segmento, uint16_t* pila_protocolos,uint64_t longitud,
 		memcpy(datagrama, &aux8, sizeof(uint8_t));
 
 		//habría que tener en cuenta la longitud dle paquete para la última fragmentación
-		
 		length_fragment = (MTU-pos) - (MTU-pos)%8;
 
 		aux16=htons(length_fragment+pos);
@@ -369,10 +368,10 @@ uint8_t moduloIP(uint8_t* segmento, uint16_t* pila_protocolos,uint64_t longitud,
 		memcpy(datagrama+pos_checkSum, checksum, 2*sizeof(uint8_t));
 
 		//Copiamos el segmento que viene de UDP, con los datos.
-		memcpy(datagrama+pos, segmento, sizeof(uint8_t)*(j+1)*(length_fragment));
-		segmento+=(j+1)*(length_fragment);
+		memcpy(datagrama+pos, segmento, sizeof(uint8_t)*(length_fragment));
+		segmento += length_fragment;
 
-		offset+=length_fragment/8;
+		offset += length_fragment/8;
 		
 		protocolos_registrados[protocolo_inferior](datagrama,pila_protocolos,length_fragment+pos,(void *)&IP_data);
 	}
