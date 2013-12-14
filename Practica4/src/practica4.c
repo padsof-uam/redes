@@ -8,6 +8,7 @@ Inicio, funciones auxiliares y modulos de transmision de la practica4
 #include <stdlib.h>
 #include <errno.h> 
 #include <math.h>
+#include <assert.h>
 #include "interface.h"
 #include "practica4.h"
 
@@ -251,7 +252,7 @@ uint8_t moduloIP(uint8_t* segmento, uint16_t* pila_protocolos,uint64_t longitud,
 	uint16_t protocolo_superior=pila_protocolos[0];
 	uint16_t protocolo_inferior=pila_protocolos[2];
 	uint16_t MTU,length_fragment,offset=0;
-
+	uint16_t ip_hlen = 24; // La longitud de cabecera es siempre 24 bytes.
 	uint8_t mascara[IP_ALEN],IP_rango_origen[IP_ALEN],IP_rango_destino[IP_ALEN];
 
 	pila_protocolos++;
@@ -264,10 +265,14 @@ uint8_t moduloIP(uint8_t* segmento, uint16_t* pila_protocolos,uint64_t longitud,
 
 	obtenerMTUInterface(interface, &MTU);
 
+	MTU -= ip_hlen + ETH_HLEN; // Quitamos longitud de cabeceras.
+
 	if(longitud>MTU){
 		fragmentation = 1;
 		num_packets = (int) ceil((double)longitud / MTU);
 	}
+
+	assert(num_packets * MTU >= longitud);
 
 	obtenerMascaraInterface(interface, mascara);
 
@@ -357,8 +362,12 @@ uint8_t moduloIP(uint8_t* segmento, uint16_t* pila_protocolos,uint64_t longitud,
 		aux8=64+pos/4;
 		memcpy(datagrama, &aux8, sizeof(uint8_t));
 
-		//habría que tener en cuenta la longitud dle paquete para la última fragmentación
-		length_fragment = (MTU-pos) - (MTU-pos)%8;
+		if(j == num_packets - 1)
+			length_fragment = longitud - offset * 8;
+		else
+			length_fragment = MTU;
+
+		assert(length_fragment <= MTU);
 
 		aux16=htons(length_fragment+pos);
 		memcpy(datagrama+2*sizeof(uint8_t), &aux16, sizeof(uint16_t));
@@ -375,6 +384,8 @@ uint8_t moduloIP(uint8_t* segmento, uint16_t* pila_protocolos,uint64_t longitud,
 		
 		protocolos_registrados[protocolo_inferior](datagrama,pila_protocolos,length_fragment+pos,(void *)&IP_data);
 	}
+
+	assert(offset * 8 >= longitud);
 	
 	return  OK;
 }
