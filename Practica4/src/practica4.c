@@ -193,7 +193,7 @@ uint8_t moduloUDP(uint8_t* mensaje, uint16_t* pila_protocolos,uint64_t longitud,
 	printf("moduloUDP(%u) %s %d.\n",protocolo_inferior,__FILE__,__LINE__);
 	Parametros UDP_data=*((Parametros*)parametros);
 
-	if(longitud>pow(2,16)-UDP_HLEN){
+	if(longitud >= pow(2,16) - UDP_HLEN){
 		printf("Error: tamano demasiado grande para UDP (%f).\n",pow(2,16));
 		return ERROR;
 	}
@@ -265,7 +265,8 @@ uint8_t moduloIP(uint8_t* segmento, uint16_t* pila_protocolos,uint64_t longitud,
 
 	obtenerMTUInterface(interface, &MTU);
 
-	MTU -= ip_hlen + ETH_HLEN; // Quitamos longitud de cabeceras.
+	MTU -= ip_hlen; // Quitamos longitud de cabeceras.
+	MTU = (MTU / 8) * 8; // Convertimos a número divisible por 8.
 
 	if(longitud>MTU){
 		fragmentation = 1;
@@ -368,6 +369,7 @@ uint8_t moduloIP(uint8_t* segmento, uint16_t* pila_protocolos,uint64_t longitud,
 			length_fragment = MTU;
 
 		assert(length_fragment <= MTU);
+		assert(j == num_packets - 1 || length_fragment == MTU);
 
 		aux16=htons(length_fragment+pos);
 		memcpy(datagrama+2*sizeof(uint8_t), &aux16, sizeof(uint16_t));
@@ -381,11 +383,9 @@ uint8_t moduloIP(uint8_t* segmento, uint16_t* pila_protocolos,uint64_t longitud,
 		segmento += length_fragment;
 
 		offset += length_fragment/8;
-		
+		assert(j == num_packets - 1 ||  offset * 8 == (j+1)*MTU);
 		protocolos_registrados[protocolo_inferior](datagrama,pila_protocolos,length_fragment+pos,(void *)&IP_data);
 	}
-
-	assert(offset * 8 >= longitud);
 	
 	return  OK;
 }
