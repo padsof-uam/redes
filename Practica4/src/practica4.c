@@ -6,6 +6,7 @@ Inicio, funciones auxiliares y modulos de transmision de la practica4
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <errno.h> 
 #include "interface.h"
 #include "practica4.h"
 
@@ -45,14 +46,17 @@ int main(int argc, char **argv){
 	}
 	if(argc==5 ){
 		if(strcmp(argv[4],"stdin")==0){
-			if (fgets(data, sizeof data, stdin)==NULL){
+			if (fgets(data, sizeof(data), stdin)==NULL){
 			      	printf("Error leyendo desde stdin: %s %s %d.\n",errbuf,__FILE__,__LINE__);
 				return ERROR;
     			}
 			sprintf(fichero_pcap_destino,"%s%s","stdin",".pcap");
 		}else{
 			sprintf(fichero_pcap_destino,"%s%s",argv[4],".pcap");
-			//Leer fichero en data [...]
+			if(read_from_file(argv[4], IP_DATAGRAM_MAX, data) == ERROR)
+			{
+				fprintf(stderr, "practica4: error leyendo fichero %s: %d (%s)\n", argv[4], errno, strerror(errno));
+			}
 		}
 	}	
 	else{
@@ -617,3 +621,24 @@ uint8_t registrarProtocolo(uint16_t protocolo, pf_notificacion handleModule, pf_
 }
 
 
+/****************************************************************************************
+* Nombre: read_from_file 								*
+* Descripcion: Lee los datos de un fichero 				*
+* Argumentos:										*
+*  -path: ruta
+*  -max_size: tamaño máximo a leer
+*  -data: puntero al array de datos		*
+* Retorno: OK/ERROR 									*
+*****************************************************************************************/
+
+uint8_t read_from_file(const char* path, const size_t max_size, char* data)
+{
+	FILE* f = NULL;
+
+	f = fopen(path, "r");
+
+	if(f == NULL || fgets(data, max_size, f) == NULL)
+		return ERROR;
+
+	return OK;
+}

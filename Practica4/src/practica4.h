@@ -85,5 +85,7 @@ void handleSignal(int nsignal);
 /***************************Funciones auxiliares a implementar*********************************/
 uint8_t aplicarMascara(uint8_t* IP, uint8_t* mascara, uint32_t longitud, uint8_t* resultado);
 
+/*************/
+uint8_t read_from_file(const char* path, const size_t max_size, char* data);
 
 #endif
