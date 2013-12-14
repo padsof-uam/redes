@@ -1,7 +1,5 @@
 GCC = gcc
-# CPPFLAGS = -ggdb -Wall -pedantic -std=c++98
-# Quitamos warnings porque el código que nos han dado está lleno de warnings por todas partes.
-CPPFLAGS = -ggdb 
+CPPFLAGS = -ggdb -Wall -pedantic -std=gnu99
 LIBS = -lpcap -lm
 TARGET = practica4
 
