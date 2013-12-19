@@ -78,7 +78,7 @@ int main(int argc, char **argv)
         printf("Error: Fallo al capturar la senal SIGINT.\n");
         return ERROR;
     }
-    
+
     srand(time(0));
 
     //Inicializamos las tablas de protocolos
@@ -495,7 +495,7 @@ uint8_t moduloICMP(uint8_t *mensaje, uint16_t *pila_protocolos, uint64_t longitu
     uint8_t segmento[ICMP_DATAG_MAX];
     uint8_t checksum[2];
     uint16_t aux16;
-    uint8_t id;
+    uint8_t id = rand();
     uint16_t protocolo_inferior = pila_protocolos[1];
 
 
@@ -515,7 +515,7 @@ uint8_t moduloICMP(uint8_t *mensaje, uint16_t *pila_protocolos, uint64_t longitu
     memcpy(segmento + pos, &aux16, sizeof(uint16_t));
     pos += sizeof(uint16_t);
 
-    aux16 = htons(64);
+    aux16 = htons(id);
     memcpy(segmento + pos, &aux16, sizeof(uint16_t));
     pos += sizeof(uint16_t);
 
