@@ -78,6 +78,8 @@ int main(int argc, char **argv)
         printf("Error: Fallo al capturar la senal SIGINT.\n");
         return ERROR;
     }
+    
+    srand(time(0));
 
     //Inicializamos las tablas de protocolos
     if (inicializarPilaEnviar() == ERROR)
@@ -271,6 +273,7 @@ uint8_t moduloIP(uint8_t *segmento, uint16_t *pila_protocolos, uint64_t longitud
     uint8_t GateWay[IP_ALEN];
     uint8_t ETH_dest[ETH_ALEN];
     uint8_t checksum[2] = {0};
+    uint8_t id;
     int num_packets, j, i;
     uint16_t protocolo_inferior = pila_protocolos[2];
     uint16_t MTU, length_fragment, offset = 0;
@@ -323,6 +326,8 @@ uint8_t moduloIP(uint8_t *segmento, uint16_t *pila_protocolos, uint64_t longitud
         printf("Pertenece a la subred\n");
     }
 
+    id = rand();
+
     for (j = 0; j < num_packets; ++j)
     {
         bzero(datagrama, IP_DATAGRAM_MAX);
@@ -335,7 +340,7 @@ uint8_t moduloIP(uint8_t *segmento, uint16_t *pila_protocolos, uint64_t longitud
         pos += sizeof(uint16_t);
 
         //Identificación
-        aux16 = htons(666);
+        aux16 = htons(id);
         memcpy(datagrama + pos, &aux16, sizeof(uint16_t));
         pos += sizeof(uint16_t);
 
@@ -486,13 +491,11 @@ uint8_t moduloETH(uint8_t *datagrama, uint16_t *pila_protocolos, uint64_t longit
 
 uint8_t moduloICMP(uint8_t *mensaje, uint16_t *pila_protocolos, uint64_t longitud, void *parametros)
 {
-
-
     uint8_t pos, aux8;
     uint8_t segmento[ICMP_DATAG_MAX];
     uint8_t checksum[2];
     uint16_t aux16;
-
+    uint8_t id;
     uint16_t protocolo_inferior = pila_protocolos[1];
 
 
