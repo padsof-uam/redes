@@ -349,6 +349,8 @@ uint8_t moduloIP(uint8_t *segmento, uint16_t *pila_protocolos, uint64_t longitud
 
         if (j != num_packets - 1)
             aux16 = htons(aux16 | 0x2000); // Paquete intermedio: fragmentado
+        else if (IP_data.puerto_destino == 0) // ICMP
+            aux16 = htons(aux16 | 0x4000);
         else
             aux16 = htons(aux16); 
 
