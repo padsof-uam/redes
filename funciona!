@@ -1,0 +1,13 @@
+He comprobado que de un equipo a otro no adyacente se envían paquetes fragmentados. 
+
+Como máximo se generan 7 paquetes. Si eran 8 TE JODES y no reensambla...
+si son menos suele reensamblar bien (alguna vez me han llegado solo 5 paquetes...)
+
+He envíado la traza desde una máquina virtual en la interfaz vmnet1 que es con nat
+(por tanto tiene una ip=192.168.126.128 aunque al enviarse se envía como si fuera mi 
+ordenador, es decir ip=192.168.126.1) y las envío a una máquina virtual que tiene
+una subred propia con el portatil. Estas ips son 192.168.94.*
+La de mi ordenador un 1 (es el que hace de router) y la de la máquina virtual receptora
+es 192.168.64.128.
+
+
